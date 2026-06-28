@@ -1,0 +1,55 @@
+<view class="page">
+
+  <view class="section-title">🏆 {{dateTitle}}</view>
+
+  <!-- 排行列表 -->
+  <view class="rank-list">
+    <view class="rank-item" wx:for="{{rankList}}" wx:key="index">
+      <!-- 排名徽章 -->
+      <view class="rank-badge {{item.rank === 1 ? 'gold' : item.rank === 2 ? 'silver' : item.rank === 3 ? 'bronze' : ''}}">
+        <text wx:if="{{item.rank === 1}}">🥇</text>
+        <text wx:elif="{{item.rank === 2}}">🥈</text>
+        <text wx:elif="{{item.rank === 3}}">🥉</text>
+        <text wx:else class="rank-num">{{item.rank}}</text>
+      </view>
+
+      <!-- 玩家信息 -->
+      <view class="rank-center">
+        <text class="rank-player">{{item.player}}</text>
+        <text class="rank-answer">{{item.answerText}}</text>
+      </view>
+
+      <!-- 猜次状态 -->
+      <view class="rank-right">
+        <view class="box-row">
+          <view class="guess-box {{bx}}" wx:for="{{item.boxes}}" wx:for-item="bx" wx:key="index"></view>
+        </view>
+        <text class="rank-count {{item.won ? 'won' : 'lost'}}">{{item.won ? item.attempts + '/6' : '✗'}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{rankList.length === 0}}">
+    <text class="empty-icon">🏮</text>
+    <text class="empty-text">还没有游戏记录</text>
+    <text class="empty-sub">快去猜今天的成语吧！</text>
+  </view>
+
+  <!-- 底部导航 -->
+  <view class="tab-bar">
+    <view class="tab-item" bindtap="onGoHome">
+      <text class="tab-icon">🏠</text>
+      <text class="tab-text">首页</text>
+    </view>
+    <view class="tab-item active">
+      <text class="tab-icon">🏆</text>
+      <text class="tab-text">排行</text>
+    </view>
+    <view class="tab-item" bindtap="onGoProfile">
+      <text class="tab-icon">👤</text>
+      <text class="tab-text">我的</text>
+    </view>
+  </view>
+
+</view>

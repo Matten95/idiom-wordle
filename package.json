@@ -1,0 +1,13 @@
+{
+  "name": "idiom-wordle",
+  "version": "1.0.0",
+  "description": "成语版 Wordle — 每日猜成语，拼音反馈 + 部首提示 + 社交分享",
+  "main": "src/engine.js",
+  "scripts": {
+    "demo": "node test/demo.js",
+    "test": "node test/demo.js",
+    "daily": "node -e \"const { getDailyIdiom } = require('./src/daily'); const d = getDailyIdiom(); console.log('今日成语:', d.text, d.pinyin.join(' '));\""
+  },
+  "keywords": ["idiom", "wordle", "chengyu", "chinese", "game"],
+  "license": "MIT"
+}

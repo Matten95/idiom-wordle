@@ -1,0 +1,18 @@
+{
+  "pages": [
+    "pages/home/home",
+    "pages/index/index",
+    "pages/history/history",
+    "pages/profile/profile"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#0F172A",
+    "navigationBarTitleText": "Wordle（成语版）",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#FDF6EC",
+    "backgroundTextStyle": "dark"
+  },
+  "cloud": true,
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

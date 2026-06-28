@@ -1,0 +1,178 @@
+<!-- 成语猜猜猜 — 主游戏页面 -->
+<view class="page">
+
+  <!-- 顶部信息栏 -->
+  <view class="header">
+    <view class="header-title">成语猜猜猜</view>
+    <view class="header-info">
+      <text class="puzzle-num">{{dateDisplay}}</text>
+      <text class="practice-badge" wx:if="{{practiceMode}}">自由练习</text>
+    </view>
+  </view>
+
+  <!-- 部首提示 — 按结构位置定位，与首页一致 -->
+  <view class="hint-bar">
+    <text class="hint-bar-icon">💡</text>
+    <text class="hint-bar-label">部首提示</text>
+  </view>
+  <view class="hint-row">
+    <view class="hint-cell" wx:for="{{hintRadicals}}" wx:key="index">
+      <text wx:if="{{item !== '?'}}" class="hint-char hint-{{hintPositions[index] || 'center'}}">{{item}}</text>
+      <text wx:else class="hint-q">?</text>
+    </view>
+  </view>
+
+  <!-- 游戏网格：历史猜测 + 空行 -->
+  <view class="grid">
+    <!-- 已完成的猜测行 -->
+    <view class="grid-row {{status === 'won' && index === attempts.length - 1 ? 'win-row' : ''}}" wx:for="{{attempts}}" wx:key="index">
+      <view
+        class="char-cell {{item.result.chars[0].color}}"
+        wx:for="{{item.result.chars}}"
+        wx:for-item="cell"
+        wx:key="index"
+      >
+        <text class="char-text">{{cell.char}}</text>
+        <text class="pinyin-text">{{cell.pinyin || ''}}</text>
+        <text class="status-label">{{cell.label}}</text>
+      </view>
+    </view>
+
+    <!-- 空行（剩余尝试机会） -->
+    <view
+      class="grid-row empty-row"
+      wx:for="{{maxAttempts - attempts.length}}"
+      wx:key="index"
+    >
+      <view class="char-cell empty-cell" wx:for="{{[1,2,3,4]}}" wx:key="*this">
+        <text class="char-text"></text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 提示系统 -->
+  <view class="hint-section" wx:if="{{status === 'playing' && attempts.length >= 3}}">
+    <view class="hint-toggle" bindtap="onRequestHint" wx:if="{{!showHint}}">
+      <text>💡 需要提示？</text>
+    </view>
+    <view class="hint-messages" wx:if="{{showHint && hintMessages.length > 0}}">
+      <text class="hint-msg" wx:for="{{hintMessages}}" wx:key="index">{{item}}</text>
+    </view>
+  </view>
+
+  <!-- 输入区 -->
+  <view class="input-area" wx:if="{{status === 'playing'}}">
+    <!-- 4 个展示格 -->
+    <view class="input-boxes" bindtap="onTapInputArea">
+      <view
+        class="input-char-box {{inputChars[index] ? 'has-char' : ''}} {{inputFocused ? 'active' : ''}}"
+        wx:for="{{[0,1,2,3]}}"
+        wx:key="*this"
+      >
+        <text class="input-char-text">{{inputChars[index] || ''}}</text>
+        <view class="cursor-bar" wx:if="{{inputFocused && index === inputChars.length && index < 4}}"></view>
+      </view>
+    </view>
+    <!-- 输入状态提示 -->
+    <view class="input-status" wx:if="{{inputStatus}}">
+      <text class="input-status-text {{inputStatus}}">
+        <block wx:if="{{inputStatus === 'valid'}}">✅ 在词库中</block>
+        <block wx:elif="{{inputStatus === 'loose'}}">⚠️ 不在词库，可尝试提交</block>
+        <block wx:elif="{{inputStatus === 'duplicate'}}">❌ 已经猜过了</block>
+      </text>
+    </view>
+    <!-- 可见输入框 -->
+    <input
+      class="visible-input"
+      type="text"
+      placeholder="在此输入 4 个汉字"
+      placeholder-style="color:#475569;font-size:28rpx;"
+      focus="{{inputFocused}}"
+      bindinput="onInputChange"
+      bindfocus="onInputFocus"
+      bindblur="onInputBlur"
+      confirm-type="done"
+      bindconfirm="onSubmitGuess"
+      adjust-position="{{true}}"
+      hold-keyboard="{{true}}"
+      cursor-spacing="20"
+    />
+  </view>
+
+  <!-- 操作按钮 -->
+  <view class="actions" wx:if="{{status === 'playing'}}">
+    <button class="btn btn-clear" bindtap="onClearInput">
+      <text class="btn-icon">⟲</text> 清空
+    </button>
+    <button
+      class="btn btn-submit {{canSubmit ? '' : 'disabled'}}"
+      bindtap="onSubmitGuess"
+      disabled="{{!canSubmit}}"
+    >
+      猜！
+    </button>
+  </view>
+
+  <!-- 胜利/失败提示 -->
+  <view class="praise-overlay" wx:if="{{showPraise}}">
+    <view class="praise-card">
+      <view class="praise-emoji">{{status === 'won' ? '🎉' : '😅'}}</view>
+      <view class="praise-text">{{praiseText}}</view>
+
+      <!-- 答案显示 -->
+      <view class="answer-reveal" wx:if="{{showAnswer}}">
+        <text class="answer-label">答案是：</text>
+        <text class="answer-text">{{answerText}}</text>
+        <text class="answer-pinyin">{{answerPinyin}}</text>
+        <text class="answer-meaning">{{answerMeaning}}</text>
+      </view>
+
+      <!-- Emoji 战绩 -->
+      <view class="emoji-grid" wx:if="{{attempts.length > 0}}">
+        <text class="emoji-line" wx:for="{{attempts}}" wx:key="index">{{item.result.emojiString}}</text>
+      </view>
+
+      <!-- 分享按钮 -->
+      <button class="btn btn-share" open-type="share">
+        📤 找朋友来比试比试
+      </button>
+
+      <!-- 返回首页 -->
+      <view class="btn-back-home" bindtap="onNavHome">
+        返回首页
+      </view>
+
+      <!-- 练习模式：换一题按钮 -->
+      <button class="btn btn-share" wx:if="{{practiceMode}}" bindtap="onNewPractice">
+        🔄 换一题
+      </button>
+
+      <!-- 连击提示 -->
+      <view class="streak-badge" wx:if="{{streakDays >= 3 && !practiceMode}}">
+        🔥 连击 {{streakDays}} 天！
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部提示 -->
+  <view class="footer-hint" wx:if="{{status === 'playing' && attempts.length === 0}}">
+    <text>💡 输入 4 个汉字，猜猜今天的成语</text>
+  </view>
+
+  <!-- 底部导航 -->
+  <view class="tab-bar">
+    <view class="tab-item" bindtap="onNavHome">
+      <text class="tab-icon">🏠</text>
+      <text class="tab-text">首页</text>
+    </view>
+    <view class="tab-item" bindtap="onGoRank">
+      <text class="tab-icon">🏆</text>
+      <text class="tab-text">排行</text>
+    </view>
+    <view class="tab-item" bindtap="onGoProfile">
+      <text class="tab-icon">👤</text>
+      <text class="tab-text">我的</text>
+    </view>
+  </view>
+
+</view>

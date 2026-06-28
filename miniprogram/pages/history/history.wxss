@@ -1,0 +1,159 @@
+.page {
+  min-height: 100vh;
+  padding: calc(140rpx + env(safe-area-inset-top)) 20rpx 120rpx;
+  box-sizing: border-box;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #F1F5F9;
+  margin-bottom: 24rpx;
+  text-align: center;
+}
+
+/* ========== 排行列表 ========== */
+.rank-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+.rank-item {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  background: #1E293B;
+  border-radius: 14rpx;
+  padding: 20rpx 20rpx;
+  transition: background 0.2s;
+}
+
+/* 排名徽章 */
+.rank-badge {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  background: #334155;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.rank-badge.gold {
+  background: rgba(234, 179, 8, 0.2);
+}
+.rank-badge.silver {
+  background: rgba(148, 163, 184, 0.2);
+}
+.rank-badge.bronze {
+  background: rgba(251, 146, 60, 0.2);
+}
+.rank-badge .rank-num {
+  font-size: 24rpx;
+  font-weight: bold;
+  color: #64748B;
+}
+.rank-badge.gold .rank-num,
+.rank-badge.silver .rank-num,
+.rank-badge.bronze .rank-num {
+  display: none;
+}
+
+/* 玩家信息（中间） */
+.rank-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+  min-width: 0;
+}
+.rank-player {
+  font-size: 26rpx;
+  font-weight: bold;
+  color: #F1F5F9;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rank-answer {
+  font-size: 28rpx;
+  color: #94A3B8;
+  font-weight: bold;
+  letter-spacing: 4rpx;
+}
+
+/* 猜次（右侧） */
+.rank-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8rpx;
+  flex-shrink: 0;
+}
+.rank-count {
+  font-size: 24rpx;
+  font-weight: bold;
+}
+.rank-count.won {
+  color: #22C55E;
+}
+.rank-count.lost {
+  color: #EF4444;
+}
+
+/* 方块 */
+.box-row {
+  display: flex;
+  gap: 5rpx;
+}
+.guess-box {
+  width: 26rpx;
+  height: 26rpx;
+  border-radius: 4rpx;
+  border: 2rpx solid #475569;
+}
+.guess-box.correct {
+  background-color: #22C55E;
+  border-color: #16A34A;
+}
+.guess-box.pinyin {
+  background-color: #3B82F6;
+  border-color: #2563EB;
+}
+.guess-box.present {
+  background-color: #EAB308;
+  border-color: #CA8A04;
+}
+.guess-box.partial {
+  background-color: #A855F7;
+  border-color: #9333EA;
+}
+.guess-box.absent {
+  background-color: #9CA3AF;
+  border-color: #6B7280;
+}
+.guess-box.empty {
+  background-color: #0F172A;
+  border-color: #475569;
+}
+
+/* ========== 空状态 ========== */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 200rpx;
+}
+.empty-icon {
+  font-size: 72rpx;
+  margin-bottom: 20rpx;
+}
+.empty-text {
+  font-size: 28rpx;
+  color: #94A3B8;
+}
+.empty-sub {
+  font-size: 24rpx;
+  color: #64748B;
+  margin-top: 8rpx;
+}

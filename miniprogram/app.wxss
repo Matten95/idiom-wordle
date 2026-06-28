@@ -1,0 +1,115 @@
+/* 全局样式 — 暗蓝炫酷风 */
+page {
+  background-color: #0F172A;
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  color: #F1F5F9;
+  font-size: 16px;
+}
+
+/* 颜色变量（通过类名使用） */
+.correct  { background-color: #22c55e; color: #F1F5F9; }
+.pinyin   { background-color: #3b82f6; color: #F1F5F9; }
+.present  { background-color: #eab308; color: #F1F5F9; }
+.partial  { background-color: #a855f7; color: #F1F5F9; }
+.absent   { background-color: #9ca3af; color: #F1F5F9; }
+
+/* 浅色文字版（用于拼音行） */
+.correct-light  { color: #16a34a; }
+.pinyin-light   { color: #2563eb; }
+.present-light  { color: #ca8a04; }
+.partial-light  { color: #9333ea; }
+.absent-light   { color: #9ca3af; }
+
+/* 通用按钮 */
+.btn-primary {
+  background-color: #3B82F6;
+  color: #F1F5F9;
+  border-radius: 12rpx;
+  padding: 20rpx 40rpx;
+  font-size: 32rpx;
+  text-align: center;
+  border: none;
+}
+.btn-primary:active {
+  opacity: 0.8;
+}
+.btn-primary[disabled] {
+  background-color: #475569;
+}
+
+/* 通用卡片 */
+.card {
+  background-color: #1E293B;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin: 20rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
+}
+
+/* ========== 底部导航栏（全局） ========== */
+.tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-around;
+  background: linear-gradient(180deg, #1A2740 0%, #1E293B 100%);
+  border-top: 2rpx solid rgba(59, 130, 246, 0.15);
+  padding: 14rpx 0;
+  padding-bottom: calc(14rpx + env(safe-area-inset-bottom));
+  z-index: 50;
+  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.3);
+}
+.tab-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6rpx 32rpx;
+  transition: all 0.2s;
+  position: relative;
+  min-width: 100rpx;
+}
+.tab-item:active {
+  transform: scale(0.95);
+}
+.tab-item.active::before {
+  content: '';
+  position: absolute;
+  top: -15rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40rpx;
+  height: 4rpx;
+  background: #3B82F6;
+  border-radius: 2rpx;
+}
+.tab-icon {
+  font-size: 44rpx;
+  line-height: 1;
+  margin-bottom: 6rpx;
+  transition: transform 0.2s;
+}
+.tab-item.active .tab-icon {
+  transform: translateY(-2rpx);
+}
+.tab-text {
+  font-size: 24rpx;
+  font-weight: 500;
+  color: #64748B;
+  transition: color 0.2s;
+}
+.tab-item.active .tab-text {
+  color: #60A5FA;
+  font-weight: 600;
+}
+
+/* 全局动画 */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30rpx); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in-up {
+  animation: fadeInUp 0.4s ease;
+}
