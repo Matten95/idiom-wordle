@@ -2,6 +2,7 @@
  * 每日谜题选择器 — 所有人同一天猜同一个词（类似 Wordle）
  */
 const IDIOMS_DATA = require('../data/idioms')
+const DEFAULT_MAX_LEVEL = 2
 
 function hashDate(dateStr) {
   let hash = 0
@@ -21,8 +22,8 @@ const EPOCH = '2026-01-01'
 
 function getDailyIdiom(dateStr) {
   const date = dateStr || getToday()
-  // 所有人同一天同一道题，全词库 120 个成语中选
-  const pool = IDIOMS_DATA.idioms
+  // 所有人同一天同一道题，默认只从大众难度题池中选
+  const pool = getDefaultPool()
   const index = hashDate(date) % pool.length
   const idiom = JSON.parse(JSON.stringify(pool[index]))
 
@@ -31,6 +32,10 @@ function getDailyIdiom(dateStr) {
   const puzzleNumber = Math.floor((d - epoch) / 86400000) + 1
 
   return { ...idiom, date, puzzleNumber }
+}
+
+function getDefaultPool() {
+  return IDIOMS_DATA.idioms.filter(item => item.level <= DEFAULT_MAX_LEVEL)
 }
 
 /** 用日期种子确定性地选 2 个部首提示位
@@ -61,6 +66,11 @@ function getHintPositions(dateStr, radicalPositions) {
 
   const pick = candidates[seed % candidates.length]
   if (!result.includes(pick)) result.push(pick)
+  if (result.length < 2) {
+    const fallbackCandidates = [0, 1, 2, 3].filter(index => !result.includes(index))
+    const fallback = fallbackCandidates[(seed + 1) % fallbackCandidates.length]
+    result.push(fallback)
+  }
 
   return result
 }
@@ -68,7 +78,7 @@ function getHintPositions(dateStr, radicalPositions) {
 function getRandomIdiom(level) {
   const pool = level
     ? IDIOMS_DATA.idioms.filter(i => i.level === level)
-    : IDIOMS_DATA.idioms
+    : getDefaultPool()
   const idx = Math.floor(Math.random() * pool.length)
   return JSON.parse(JSON.stringify(pool[idx]))
 }

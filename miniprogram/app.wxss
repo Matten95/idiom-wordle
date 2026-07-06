@@ -1,29 +1,29 @@
-/* 全局样式 — 暗蓝炫酷风 */
+/* 全局样式 — 白玉靛蓝主题 */
 page {
-  background-color: #0F172A;
+  background-color: #F1F5FF;
   font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-  color: #F1F5F9;
+  color: #18213d;
   font-size: 16px;
 }
 
-/* 颜色变量（通过类名使用） */
-.correct  { background-color: #22c55e; color: #F1F5F9; }
-.pinyin   { background-color: #3b82f6; color: #F1F5F9; }
-.present  { background-color: #eab308; color: #F1F5F9; }
-.partial  { background-color: #a855f7; color: #F1F5F9; }
-.absent   { background-color: #9ca3af; color: #F1F5F9; }
+/* 反馈色（字形 / 拼音 / 含字 / 部件 / 无匹配） */
+.correct  { background-color: #23856d; color: #ffffff; }
+.pinyin   { background-color: #315fb5; color: #ffffff; }
+.present  { background-color: #d88c2e; color: #ffffff; }
+.partial  { background-color: #7a67b7; color: #ffffff; }
+.absent   { background-color: #8b93a1; color: #ffffff; }
 
 /* 浅色文字版（用于拼音行） */
-.correct-light  { color: #16a34a; }
-.pinyin-light   { color: #2563eb; }
-.present-light  { color: #ca8a04; }
-.partial-light  { color: #9333ea; }
-.absent-light   { color: #9ca3af; }
+.correct-light  { color: #23856d; }
+.pinyin-light   { color: #315fb5; }
+.present-light  { color: #9a621e; }
+.partial-light  { color: #6d5da3; }
+.absent-light   { color: #59647a; }
 
 /* 通用按钮 */
 .btn-primary {
-  background-color: #3B82F6;
-  color: #F1F5F9;
+  background: linear-gradient(135deg, #315fb5 0%, #5f73c7 100%);
+  color: #ffffff;
   border-radius: 12rpx;
   padding: 20rpx 40rpx;
   font-size: 32rpx;
@@ -34,16 +34,19 @@ page {
   opacity: 0.8;
 }
 .btn-primary[disabled] {
-  background-color: #475569;
+  background: rgba(237, 243, 255, 0.86);
+  color: rgba(49, 95, 181, 0.42);
+  border: 1rpx solid rgba(49, 95, 181, 0.14);
 }
 
 /* 通用卡片 */
 .card {
-  background-color: #1E293B;
+  background-color: rgba(255, 255, 255, 0.9);
+  border: 1rpx solid rgba(55, 86, 152, 0.16);
   border-radius: 16rpx;
   padding: 30rpx;
   margin: 20rpx;
-  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
+  box-shadow: 0 10rpx 28rpx rgba(28, 57, 112, 0.08);
 }
 
 /* ========== 底部导航栏（全局） ========== */
@@ -54,12 +57,12 @@ page {
   right: 0;
   display: flex;
   justify-content: space-around;
-  background: linear-gradient(180deg, #1A2740 0%, #1E293B 100%);
-  border-top: 2rpx solid rgba(59, 130, 246, 0.15);
+  background: rgba(255, 255, 255, 0.96);
+  border-top: 1rpx solid rgba(55, 86, 152, 0.16);
   padding: 14rpx 0;
   padding-bottom: calc(14rpx + env(safe-area-inset-bottom));
   z-index: 50;
-  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.3);
+  box-shadow: 0 -8rpx 24rpx rgba(28, 57, 112, 0.08);
 }
 .tab-item {
   display: flex;
@@ -82,26 +85,38 @@ page {
   transform: translateX(-50%);
   width: 40rpx;
   height: 4rpx;
-  background: #3B82F6;
+  background: linear-gradient(90deg, #315fb5 0%, #5f73c7 100%);
   border-radius: 2rpx;
 }
 .tab-icon {
-  font-size: 44rpx;
+  width: 42rpx;
+  height: 42rpx;
+  border-radius: 50%;
+  border: 1rpx solid rgba(89, 100, 122, 0.28);
+  color: #59647a;
+  font-size: 22rpx;
+  font-weight: 700;
   line-height: 1;
   margin-bottom: 6rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: transform 0.2s;
 }
 .tab-item.active .tab-icon {
   transform: translateY(-2rpx);
+  color: #ffffff;
+  background: linear-gradient(135deg, #315fb5 0%, #5f73c7 100%);
+  border-color: #315fb5;
 }
 .tab-text {
   font-size: 24rpx;
   font-weight: 500;
-  color: #64748B;
+  color: #59647a;
   transition: color 0.2s;
 }
 .tab-item.active .tab-text {
-  color: #60A5FA;
+  color: #315fb5;
   font-weight: 600;
 }
 

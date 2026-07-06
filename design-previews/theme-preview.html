@@ -1,0 +1,802 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Idiom Wordle Theme Preview</title>
+  <style>
+    :root {
+      --bg: #f7f1e6;
+      --bg2: #f3eadb;
+      --surface: #fffaf0;
+      --surface2: #f7efdf;
+      --text: #251f1a;
+      --muted: #7a6959;
+      --line: rgba(58, 42, 30, 0.16);
+      --primary: #8d2f25;
+      --primary2: #c55a32;
+      --accent: #d6a74f;
+      --accent2: #1f5c55;
+      --shadow: rgba(52, 35, 22, 0.16);
+      --correct: #2f7d63;
+      --pinyin: #3e6ca8;
+      --present: #c48635;
+      --partial: #805e9d;
+      --absent: #8b918b;
+      --phone: #111;
+      --name: "朱砂墨玉";
+      --note: "更有国风高级感，朱砂负责记忆点，墨玉压住气质。";
+    }
+
+    body[data-theme="cinnabar"] {
+      --bg: #f7f1e6;
+      --bg2: #efe1c9;
+      --surface: #fffaf0;
+      --surface2: #f5ead5;
+      --text: #241b18;
+      --muted: #776252;
+      --line: rgba(94, 55, 36, 0.18);
+      --primary: #9f3427;
+      --primary2: #d26639;
+      --accent: #d3a64e;
+      --accent2: #174f4a;
+      --shadow: rgba(66, 39, 25, 0.16);
+      --correct: #286f59;
+      --pinyin: #3c669d;
+      --present: #b9782e;
+      --partial: #76558b;
+      --absent: #7f847f;
+      --name: "朱砂墨玉";
+      --note: "成熟、强记忆点、适合国风成语品牌。";
+    }
+
+    body[data-theme="celadon"] {
+      --bg: #eef7f0;
+      --bg2: #dcebe5;
+      --surface: #fbfff9;
+      --surface2: #eaf5ec;
+      --text: #19302d;
+      --muted: #5d736d;
+      --line: rgba(38, 101, 88, 0.16);
+      --primary: #197363;
+      --primary2: #2fa393;
+      --accent: #e2a84f;
+      --accent2: #d75d45;
+      --shadow: rgba(27, 82, 72, 0.13);
+      --correct: #197363;
+      --pinyin: #4777bc;
+      --present: #c78d32;
+      --partial: #8a69a6;
+      --absent: #8a9892;
+      --name: "青瓷晴雨";
+      --note: "清爽、轻盈、比较适合每日轻游戏。";
+    }
+
+    body[data-theme="midnight"] {
+      --bg: #171611;
+      --bg2: #272217;
+      --surface: #26221a;
+      --surface2: #312a1d;
+      --text: #f8efd9;
+      --muted: #c7bda6;
+      --line: rgba(243, 212, 144, 0.16);
+      --primary: #f0b84c;
+      --primary2: #ff7d55;
+      --accent: #42c8b5;
+      --accent2: #d94848;
+      --shadow: rgba(0, 0, 0, 0.34);
+      --correct: #31a985;
+      --pinyin: #5795e7;
+      --present: #e4a83c;
+      --partial: #a986db;
+      --absent: #737974;
+      --name: "夜读金墨";
+      --note: "更像游戏，强对比、夜间友好、年轻化。";
+    }
+
+    body[data-theme="indigo"] {
+      --bg: #f1f5ff;
+      --bg2: #e4ebfb;
+      --surface: #ffffff;
+      --surface2: #edf3ff;
+      --text: #18213d;
+      --muted: #59647a;
+      --line: rgba(55, 86, 152, 0.15);
+      --primary: #315fb5;
+      --primary2: #5f73c7;
+      --accent: #f0a641;
+      --accent2: #e45b58;
+      --shadow: rgba(28, 57, 112, 0.12);
+      --correct: #23856d;
+      --pinyin: #315fb5;
+      --present: #d88c2e;
+      --partial: #7a67b7;
+      --absent: #8b93a1;
+      --name: "白玉靛蓝";
+      --note: "现代、干净、偏产品化，靛蓝到雾紫蓝更稳。";
+    }
+
+    body[data-theme="tangerine"] {
+      --bg: #fff3e5;
+      --bg2: #ffe1bf;
+      --surface: #fffaf4;
+      --surface2: #fff0dd;
+      --text: #2c2118;
+      --muted: #7d6650;
+      --line: rgba(167, 86, 35, 0.16);
+      --primary: #de5a2a;
+      --primary2: #f39a33;
+      --accent: #275b82;
+      --accent2: #1d8c74;
+      --shadow: rgba(126, 62, 20, 0.14);
+      --correct: #22856b;
+      --pinyin: #336da7;
+      --present: #d8852f;
+      --partial: #8b65a7;
+      --absent: #928a80;
+      --name: "活字橙金";
+      --note: "更活泼、更适合社交分享，但国风克制感稍弱。";
+    }
+
+    body[data-theme="plum"] {
+      --bg: #faf0f4;
+      --bg2: #f1e6ef;
+      --surface: #fffafd;
+      --surface2: #f8edf4;
+      --text: #2f2330;
+      --muted: #705f6d;
+      --line: rgba(124, 62, 93, 0.16);
+      --primary: #8a315c;
+      --primary2: #c8557c;
+      --accent: #356f71;
+      --accent2: #d49a3a;
+      --shadow: rgba(80, 36, 59, 0.13);
+      --correct: #287967;
+      --pinyin: #496fa9;
+      --present: #c48b33;
+      --partial: #8b5d95;
+      --absent: #90868d;
+      --name: "梅子宣纸";
+      --note: "偏文艺、有女性向审美，但仍保留成语书卷气。";
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 18% 12%, color-mix(in srgb, var(--primary) 18%, transparent), transparent 30%),
+        radial-gradient(circle at 84% 4%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 26%),
+        linear-gradient(150deg, var(--bg), var(--bg2));
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    }
+
+    .stage {
+      min-height: 100vh;
+      padding: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .overview {
+      align-items: flex-start;
+      justify-content: flex-start;
+      padding: 28px;
+      display: grid;
+      grid-template-columns: repeat(3, 420px);
+      gap: 34px 28px;
+    }
+
+    .overview-card {
+      color: var(--text);
+    }
+
+    .overview-card .caption {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin: 0 12px 12px;
+    }
+
+    .overview-card h2 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.2;
+    }
+
+    .overview-card p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .pair .phone {
+      width: 204px;
+      height: 442px;
+      border-radius: 22px;
+      box-shadow: 0 18px 46px var(--shadow);
+    }
+
+    .pair .screen {
+      width: 194px;
+      height: 432px;
+      border-radius: 18px;
+      padding: 21px 12px 18px;
+      transform-origin: top left;
+      font-size: 8px;
+    }
+
+    .pair .brand-title {
+      font-size: 22px;
+    }
+
+    .phone {
+      width: 390px;
+      height: 844px;
+      border-radius: 42px;
+      padding: 5px;
+      background: linear-gradient(180deg, #1a1a1a, #050505);
+      box-shadow: 0 28px 80px var(--shadow);
+      overflow: hidden;
+    }
+
+    .screen {
+      position: relative;
+      width: 380px;
+      height: 834px;
+      overflow: hidden;
+      border-radius: 37px;
+      padding: 46px 24px 26px;
+      background:
+        linear-gradient(180deg, color-mix(in srgb, var(--bg) 92%, white), var(--bg2)),
+        repeating-linear-gradient(90deg, rgba(0,0,0,0.025) 0, rgba(0,0,0,0.025) 1px, transparent 1px, transparent 18px);
+    }
+
+    .screen::before {
+      content: "";
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      width: 118px;
+      height: 28px;
+      transform: translateX(-50%);
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.68);
+      z-index: 5;
+    }
+
+    .topline {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .brand-title {
+      display: block;
+      font-size: 33px;
+      font-weight: 800;
+      line-height: 1.05;
+      color: var(--text);
+    }
+
+    .date-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 9px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .status-pill {
+      flex-shrink: 0;
+      min-width: 86px;
+      min-height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary);
+      background: color-mix(in srgb, var(--primary) 11%, var(--surface));
+      border: 1px solid color-mix(in srgb, var(--primary) 26%, transparent);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+      box-shadow: 0 4px 9px color-mix(in srgb, var(--shadow) 60%, transparent);
+    }
+
+    .status-pill::before {
+      content: "";
+      width: 5px;
+      height: 5px;
+      margin-right: 4px;
+      border-radius: 999px;
+      background: currentColor;
+      opacity: 0.78;
+    }
+
+    .paper {
+      position: relative;
+      padding: 22px 18px 18px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, var(--surface), var(--surface2));
+      box-shadow: 0 16px 34px var(--shadow);
+      overflow: hidden;
+    }
+
+    .paper::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--accent), var(--accent2));
+    }
+
+    .paper-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .kicker {
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .seal {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+      color: var(--primary);
+      border: 2px solid color-mix(in srgb, var(--primary) 54%, transparent);
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .hint-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .hint-cell,
+    .tile,
+    .input-tile {
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      position: relative;
+      min-width: 0;
+    }
+
+    .hint-cell {
+      height: 66px;
+      color: var(--accent2);
+      background: color-mix(in srgb, var(--surface) 82%, var(--accent2) 8%);
+      border: 1.5px dashed color-mix(in srgb, var(--accent2) 30%, transparent);
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+    .hint-cell.revealed {
+      background: color-mix(in srgb, var(--surface) 86%, var(--primary) 8%);
+      color: var(--primary);
+      border-style: solid;
+      border-color: color-mix(in srgb, var(--primary) 32%, transparent);
+    }
+
+    .cell-index {
+      position: absolute;
+      top: 7px;
+      left: 8px;
+      color: var(--muted);
+      opacity: 0.72;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .meta {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 17px;
+    }
+
+    .primary {
+      height: 48px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), var(--primary2));
+      font-size: 17px;
+      font-weight: 800;
+      box-shadow: 0 10px 22px color-mix(in srgb, var(--primary) 28%, transparent);
+    }
+
+    .secondary-grid {
+      margin-top: 14px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 9px;
+    }
+
+    .action {
+      min-height: 72px;
+      padding: 12px 8px;
+      border-radius: 15px;
+      border: 1px solid var(--line);
+      background: color-mix(in srgb, var(--surface) 82%, transparent);
+      box-shadow: 0 8px 18px color-mix(in srgb, var(--shadow) 58%, transparent);
+    }
+
+    .action strong,
+    .quiet strong {
+      display: block;
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.25;
+      min-height: 33px;
+      overflow-wrap: anywhere;
+    }
+
+    .action span,
+    .quiet span {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.2;
+    }
+
+    .note {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 16px;
+      background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+      border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent);
+    }
+
+    .note small {
+      display: block;
+      color: var(--primary);
+      font-size: 11px;
+      font-weight: 800;
+      margin-bottom: 5px;
+    }
+
+    .note p {
+      margin: 0;
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .quiet-links {
+      margin-top: 13px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .quiet {
+      padding: 11px 8px;
+      border-radius: 14px;
+      background: color-mix(in srgb, var(--surface) 60%, transparent);
+      border: 1px solid color-mix(in srgb, var(--line) 75%, transparent);
+    }
+
+    .game-header {
+      text-align: center;
+      margin-bottom: 13px;
+    }
+
+    .game-title {
+      color: var(--text);
+      font-size: 28px;
+      font-weight: 850;
+      line-height: 1.1;
+    }
+
+    .game-date {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 7px;
+    }
+
+    .hint-bar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      color: var(--primary);
+      margin-bottom: 8px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .hint-icon {
+      width: 25px;
+      height: 25px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      border: 1.5px solid color-mix(in srgb, var(--primary) 38%, transparent);
+    }
+
+    .game-hints {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .game-hints .hint-cell {
+      height: 58px;
+      font-size: 22px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 7px;
+      margin-bottom: 16px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 7px;
+    }
+
+    .tile {
+      height: 58px;
+      border: 1.5px solid var(--line);
+      background: color-mix(in srgb, var(--surface) 84%, transparent);
+      color: var(--text);
+      font-weight: 850;
+      font-size: 23px;
+    }
+
+    .tile small {
+      display: block;
+      color: color-mix(in srgb, var(--muted) 84%, transparent);
+      font-size: 10px;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    .tile.correct,
+    .tile.pinyin,
+    .tile.present,
+    .tile.partial,
+    .tile.absent {
+      color: white;
+      border-color: transparent;
+    }
+
+    .tile.correct { background: var(--correct); }
+    .tile.pinyin { background: var(--pinyin); }
+    .tile.present { background: var(--present); }
+    .tile.partial { background: var(--partial); }
+    .tile.absent { background: var(--absent); }
+    .tile.correct small,
+    .tile.pinyin small,
+    .tile.present small,
+    .tile.partial small,
+    .tile.absent small {
+      color: rgba(255,255,255,0.82);
+    }
+
+    .input-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 3px;
+    }
+
+    .input-tile {
+      height: 58px;
+      border: 1.5px dashed color-mix(in srgb, var(--primary) 36%, transparent);
+      background: color-mix(in srgb, var(--surface) 72%, transparent);
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .ghost,
+    .submit {
+      height: 46px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .ghost {
+      color: var(--muted);
+      background: color-mix(in srgb, var(--surface) 58%, transparent);
+      border: 1px solid var(--line);
+    }
+
+    .submit {
+      color: white;
+      background: linear-gradient(135deg, var(--primary), var(--primary2));
+    }
+
+    .tabbar {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 86px;
+      padding: 10px 42px 18px;
+      display: flex;
+      justify-content: space-between;
+      background: color-mix(in srgb, var(--surface) 78%, transparent);
+      border-top: 1px solid var(--line);
+      backdrop-filter: blur(14px);
+    }
+
+    .tab {
+      display: grid;
+      gap: 3px;
+      justify-items: center;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .tab b {
+      width: 25px;
+      height: 25px;
+      display: grid;
+      place-items: center;
+      border-radius: 9px;
+      background: color-mix(in srgb, var(--surface2) 82%, transparent);
+      color: var(--primary);
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body data-theme="cinnabar">
+  <main class="stage" id="stage"></main>
+  <script>
+    const themes = [
+      { id: 'cinnabar', name: '朱砂墨玉', note: '成熟、强记忆点、适合国风成语品牌。' },
+      { id: 'celadon', name: '青瓷晴雨', note: '清爽、轻盈、比较适合每日轻游戏。' },
+      { id: 'midnight', name: '夜读金墨', note: '更像游戏，强对比、夜间友好、年轻化。' },
+      { id: 'indigo', name: '白玉靛蓝', note: '现代、干净、偏产品化，靛蓝到雾紫蓝更稳。' },
+      { id: 'tangerine', name: '活字橙金', note: '更活泼、更适合社交分享。' },
+      { id: 'plum', name: '梅子宣纸', note: '偏文艺、有女性向审美，但仍有书卷气。' }
+    ];
+
+    function homeMarkup() {
+      return `
+        <div class="phone"><section class="screen">
+          <div class="topline">
+            <div><span class="brand-title">成语日课</span><div class="date-row"><span>7月6日</span><span>#187</span></div></div>
+            <div class="status-pill">今日待挑战</div>
+          </div>
+          <div class="paper">
+            <div class="paper-head"><span class="kicker">今日谜题笺</span><span class="seal">日课</span></div>
+            <div class="hint-row">
+              <div class="hint-cell"><span class="cell-index">一</span>?</div>
+              <div class="hint-cell revealed"><span class="cell-index">二</span>亻</div>
+              <div class="hint-cell revealed"><span class="cell-index">三</span>月</div>
+              <div class="hint-cell"><span class="cell-index">四</span>?</div>
+            </div>
+            <div class="meta"><span>已揭示 2/4</span><span>拼音反馈</span><span>连击 6 天</span></div>
+            <div class="primary">开始今日挑战</div>
+          </div>
+          <div class="secondary-grid">
+            <div class="action"><strong>提示猜词</strong><span>看线索破题</span></div>
+            <div class="action"><strong>自由练习</strong><span>不限日期</span></div>
+            <div class="action"><strong>提示猜词-双人版</strong><span>好友同局</span></div>
+          </div>
+          <div class="note"><small>今日札记</small><p>留一点线索，不急着给答案。猜到时，要像翻开旧书里夹着的纸条。</p></div>
+          <div class="quiet-links">
+            <div class="quiet"><strong>好友榜</strong><span>今日排名</span></div>
+            <div class="quiet"><strong>我的印记</strong><span>历史记录</span></div>
+            <div class="quiet"><strong>提示猜词-竞技版</strong><span>敬请期待</span></div>
+          </div>
+        </section></div>`;
+    }
+
+    function gameMarkup() {
+      return `
+        <div class="phone"><section class="screen">
+          <div class="game-header">
+            <div class="game-title">部首猜词</div>
+            <div class="game-date"><span>7月6日</span><span>自由练习</span></div>
+          </div>
+          <div class="hint-bar"><span class="hint-icon">首</span><span>今日部首</span></div>
+          <div class="game-hints">
+            <div class="hint-cell">?</div><div class="hint-cell revealed">亻</div><div class="hint-cell revealed">月</div><div class="hint-cell">?</div>
+          </div>
+          <div class="grid">
+            <div class="row">
+              <div class="tile partial">叶<small>ye</small></div><div class="tile absent">落<small>luo</small></div><div class="tile present">归<small>gui</small></div><div class="tile pinyin">根<small>gen</small></div>
+            </div>
+            <div class="row">
+              <div class="tile correct">叶<small>ye</small></div><div class="tile correct">公<small>gong</small></div><div class="tile pinyin">好<small>hao</small></div><div class="tile present">龙<small>long</small></div>
+            </div>
+            <div class="row"><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div></div>
+            <div class="row"><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div></div>
+            <div class="row"><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div></div>
+            <div class="row"><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div></div>
+          </div>
+          <div class="input-row"><div class="input-tile"></div><div class="input-tile"></div><div class="input-tile"></div><div class="input-tile"></div></div>
+          <div class="buttons"><div class="ghost">清空</div><div class="submit">猜！</div></div>
+          <div class="tabbar"><div class="tab"><b>首</b><span>首页</span></div><div class="tab"><b>榜</b><span>排行</span></div><div class="tab"><b>我</b><span>我的</span></div></div>
+        </section></div>`;
+    }
+
+    function renderSingle(theme, screen) {
+      document.body.dataset.theme = theme;
+      document.getElementById('stage').className = 'stage';
+      document.getElementById('stage').innerHTML = screen === 'game' ? gameMarkup() : homeMarkup();
+    }
+
+    function renderOverview() {
+      const stage = document.getElementById('stage');
+      stage.className = 'overview';
+      stage.innerHTML = themes.map(t => `
+        <section class="overview-card" data-theme-card="${t.id}">
+          <div class="caption"><div><h2>${t.name}</h2><p>${t.note}</p></div></div>
+          <div class="pair">${homeMarkup()}${gameMarkup()}</div>
+        </section>
+      `).join('');
+      themes.forEach(t => {
+        const card = document.querySelector(`[data-theme-card="${t.id}"]`);
+        const oldTheme = document.body.dataset.theme;
+        document.body.dataset.theme = t.id;
+        const vars = getComputedStyle(document.body);
+        ['--bg','--bg2','--surface','--surface2','--text','--muted','--line','--primary','--primary2','--accent','--accent2','--shadow','--correct','--pinyin','--present','--partial','--absent'].forEach(v => {
+          card.style.setProperty(v, vars.getPropertyValue(v));
+        });
+        document.body.dataset.theme = oldTheme;
+      });
+    }
+
+    const params = new URLSearchParams(location.search);
+    const theme = params.get('theme') || 'cinnabar';
+    const screen = params.get('screen') || 'home';
+    if (params.get('overview') === '1') {
+      document.body.dataset.theme = 'indigo';
+      renderOverview();
+    } else {
+      renderSingle(theme, screen);
+    }
+  </script>
+</body>
+</html>

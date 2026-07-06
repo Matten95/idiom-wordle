@@ -2,14 +2,17 @@
   "pages": [
     "pages/home/home",
     "pages/index/index",
+    "pages/idiom-match/idiom-match",
+    "pages/room-lobby/room-lobby",
+    "pages/two-player-game/two-player-game",
     "pages/history/history",
     "pages/profile/profile"
   ],
   "window": {
-    "navigationBarBackgroundColor": "#0F172A",
-    "navigationBarTitleText": "Wordle（成语版）",
-    "navigationBarTextStyle": "white",
-    "backgroundColor": "#FDF6EC",
+    "navigationBarBackgroundColor": "#F1F5FF",
+    "navigationBarTitleText": "成语日课",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F1F5FF",
     "backgroundTextStyle": "dark"
   },
   "cloud": true,

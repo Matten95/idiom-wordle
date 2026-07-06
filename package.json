@@ -5,7 +5,10 @@
   "main": "src/engine.js",
   "scripts": {
     "demo": "node test/demo.js",
-    "test": "node test/demo.js",
+    "score": "node test/score.js",
+    "sync:data": "node scripts/sync-data.js",
+    "check": "node test/project-health.js",
+    "test": "node test/demo.js && node test/score.js && node test/project-health.js",
     "daily": "node -e \"const { getDailyIdiom } = require('./src/daily'); const d = getDailyIdiom(); console.log('今日成语:', d.text, d.pinyin.join(' '));\""
   },
   "keywords": ["idiom", "wordle", "chengyu", "chinese", "game"],

@@ -74,9 +74,9 @@ function scoreGuess(guessChars, guessPinyin, answer) {
     if (!hasPinyin || !guessPinyin[i]) continue
     const level = checkPinyin(guessPinyin[i], answerPinyin[i])
     if (level === 'exact') {
-      chars[i] = { char: guessChars[i], status: 'pinyin', label: '同音不同字', emoji: '🟦', color: 'pinyin', pinyin: guessPinyin[i], answerPinyin: answerPinyin[i] }
+      chars[i] = { char: guessChars[i], status: 'pinyin', label: '同音', emoji: '🟦', color: 'pinyin', pinyin: guessPinyin[i], answerPinyin: answerPinyin[i] }
     } else if (level === 'partial') {
-      chars[i] = { char: guessChars[i], status: 'partial', label: '拼音部分', emoji: '🟪', color: 'partial', pinyin: guessPinyin[i], answerPinyin: answerPinyin[i] }
+      chars[i] = { char: guessChars[i], status: 'partial', label: '近音', emoji: '🟪', color: 'partial', pinyin: guessPinyin[i], answerPinyin: answerPinyin[i] }
     }
   }
 
@@ -85,7 +85,7 @@ function scoreGuess(guessChars, guessPinyin, answer) {
     if (chars[i]) continue
     const pos = answerChars.findIndex((c, j) => c === guessChars[i] && !used[j])
     if (pos !== -1) {
-      chars[i] = { char: guessChars[i], status: 'present', label: '位置不对', emoji: '🟨', color: 'present', pinyin: hasPinyin && guessPinyin[i] ? guessPinyin[i] : null, correctPosition: pos + 1 }
+      chars[i] = { char: guessChars[i], status: 'present', label: '错位', emoji: '🟨', color: 'present', pinyin: hasPinyin && guessPinyin[i] ? guessPinyin[i] : null, correctPosition: pos + 1 }
       used[pos] = true
     }
   }
@@ -93,7 +93,7 @@ function scoreGuess(guessChars, guessPinyin, answer) {
   // 第四遍：完全不在 → ⬛
   for (let i = 0; i < 4; i++) {
     if (chars[i]) continue
-    chars[i] = { char: guessChars[i], status: 'absent', label: '不存在', emoji: '⬛', color: 'absent', pinyin: hasPinyin && guessPinyin[i] ? guessPinyin[i] : null }
+    chars[i] = { char: guessChars[i], status: 'absent', label: '不在', emoji: '⬛', color: 'absent', pinyin: hasPinyin && guessPinyin[i] ? guessPinyin[i] : null }
   }
 
   const correctCount = chars.filter(c => c.status === 'correct').length

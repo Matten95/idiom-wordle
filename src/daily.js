@@ -8,6 +8,7 @@
  */
 
 const idiomsData = require('../data/idioms.json')
+const DEFAULT_MAX_LEVEL = 2
 
 /**
  * 简单但稳定的日期哈希函数
@@ -46,8 +47,8 @@ function getTodayString() {
  */
 function getDailyIdiom(dateStr) {
   const date = dateStr || getTodayString()
-  // 所有人同一天同一个词，全词库选取
-  const pool = idiomsData.idioms
+  // 所有人同一天同一个词，默认只从大众难度题池中选取
+  const pool = getDefaultPool()
   const index = hashDate(date) % pool.length
   const idiom = JSON.parse(JSON.stringify(pool[index]))
 
@@ -56,6 +57,10 @@ function getDailyIdiom(dateStr) {
     date,
     puzzleNumber: calculatePuzzleNumber(date),
   }
+}
+
+function getDefaultPool() {
+  return idiomsData.idioms.filter((item) => item.level <= DEFAULT_MAX_LEVEL)
 }
 
 /**
@@ -93,7 +98,7 @@ function getBankStats() {
 function getRandomIdiom(level) {
   const pool = level
     ? idiomsData.idioms.filter((i) => i.level === level)
-    : idiomsData.idioms
+    : getDefaultPool()
   const idx = Math.floor(Math.random() * pool.length)
   return JSON.parse(JSON.stringify(pool[idx]))
 }
@@ -116,6 +121,11 @@ function getHintPositions(dateStr, radicalPositions) {
   }
   const pick = candidates[seed % candidates.length]
   if (!result.includes(pick)) result.push(pick)
+  if (result.length < 2) {
+    const fallbackCandidates = [0, 1, 2, 3].filter((index) => !result.includes(index))
+    const fallback = fallbackCandidates[(seed + 1) % fallbackCandidates.length]
+    result.push(fallback)
+  }
   return result
 }
 

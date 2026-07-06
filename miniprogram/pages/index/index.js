@@ -9,6 +9,7 @@ Page({
     // 谜题信息
     dateDisplay: '',
     date: '',
+    hintTitle: '今日部首',
     // 部首提示（2/4 显示，其余为 '?'）
     hintRadicals: ['?', '?', '?', '?'],
     hintPositions: ['', '', '', ''],  // left/right/top/bottom/center
@@ -22,6 +23,7 @@ Page({
     // 输入（统一输入框模式，不打断中文输入法）
     inputText: '',          // 原始输入文本
     inputChars: ['', '', '', ''],  // 拆成 4 个字的展示数组
+    inputSlots: [0, 1, 2, 3],
     inputFocused: false,    // 输入框是否聚焦
     canSubmit: false,
     inputStatus: '',        // '' | 'valid' | 'loose' | 'duplicate'
@@ -30,6 +32,9 @@ Page({
     showPraise: false,
     praiseText: '',
     showAnswer: false,
+    roundFeedback: '',
+    resultReview: '',
+    inputGuideText: '点字格输入，颜色会给线索',
     // 提示系统
     showHint: false,
     hintMessages: [],
@@ -52,7 +57,7 @@ Page({
     // 练习模式
     this._practiceMode = options && options.mode === 'practice'
     if (this._practiceMode) {
-      this.setData({ practiceMode: true })
+      this.setData({ practiceMode: true, hintTitle: '练习部首' })
     }
     this.initGame()
   },
@@ -63,9 +68,10 @@ Page({
     const idiom = this._practiceMode ? getRandomIdiom() : getDailyIdiom(today)
 
     // 检查是否有今日存档
-    const saved = this.loadSavedGame(today)
+    const saved = this._practiceMode ? null : this.loadSavedGame(today)
 
     if (saved) {
+      const lastAttempt = saved.attempts[saved.attempts.length - 1]
       // 恢复游戏
       this.setData({
         dateDisplay: this.fmtDate(today),
@@ -78,6 +84,8 @@ Page({
           ? getPraise(saved.attempts.length, true, this.getStreak())
           : getPraise(saved.attempts.length, false, 0, idiom.text),
         showAnswer: saved.status === 'lost',
+        roundFeedback: saved.status === 'playing' && lastAttempt ? this.buildRoundFeedback(lastAttempt.result, saved.status) : '',
+        resultReview: saved.status !== 'playing' ? this.buildResultReview(saved.attempts) : '',
       })
     } else {
       // 新游戏
@@ -90,8 +98,12 @@ Page({
         inputText: '',
         inputChars: ['', '', '', ''],
         inputFocused: false,
+        canSubmit: false,
+        inputStatus: '',
         showPraise: false,
         showAnswer: false,
+        roundFeedback: '',
+        resultReview: '',
       })
     }
 
@@ -189,14 +201,14 @@ Page({
     // 验证：不能重复提交相同猜测
     const isDuplicate = this.data.attempts.some(a => a.chars.join('') === guessText)
     if (isDuplicate) {
-      wx.showToast({ title: '已经猜过这个成语了', icon: 'none' })
+      wx.showToast({ title: '这条猜过了，换个方向试试', icon: 'none' })
       return
     }
 
     // 验证：必须是 4 个汉字
     const nonChinese = chars.findIndex(c => !/^[一-鿿]$/.test(c))
     if (nonChinese >= 0) {
-      const hint = chars[nonChinese] ? `第${nonChinese + 1}个字"${chars[nonChinese]}"不是汉字` : '请填写完整'
+      const hint = chars[nonChinese] ? `第${nonChinese + 1}个不是汉字，换成成语字` : '还差几个字，补齐 4 个再试'
       wx.showToast({ title: hint, icon: 'none', duration: 2000 })
       return
     }
@@ -219,8 +231,10 @@ Page({
     if (result.summary.isWin) {
       newStatus = 'won'
       showPraise = true
-      this.updateStreak()
-      praiseText = getPraise(attempts.length, true, this.getStreak())
+      if (!this._practiceMode) {
+        this.updateStreak()
+      }
+      praiseText = getPraise(attempts.length, true, this._practiceMode ? 0 : this.getStreak())
     } else if (newRow >= this.data.maxAttempts) {
       newStatus = 'lost'
       showPraise = true
@@ -236,10 +250,13 @@ Page({
       showPraise,
       showAnswer,
       praiseText,
+      roundFeedback: this.buildRoundFeedback(result, newStatus),
+      resultReview: this.buildResultReview(attempts),
       inputText: '',
       inputChars: ['', '', '', ''],
       inputFocused: false,
       canSubmit: false,
+      inputStatus: '',
     })
 
     if (newStatus === 'playing') {
@@ -269,6 +286,36 @@ Page({
     } else {
       wx.vibrateShort({ type: 'light' })
     }
+  },
+
+  buildRoundFeedback(result, status) {
+    if (!result || !result.summary) return ''
+    const s = result.summary
+    if (status === 'won') return '猜中了！这局漂亮。'
+    const pieces = []
+    if (s.correctCount > 0) pieces.push(`${s.correctCount} 个字位置正确`)
+    if (s.pinyinCount > 0) pieces.push(`${s.pinyinCount} 个读音对了`)
+    if (s.partialCount > 0) pieces.push(`${s.partialCount} 个读音接近`)
+    if (s.presentCount > 0) pieces.push(`${s.presentCount} 个字换个位置`)
+    if (pieces.length > 0) return `方向不错：${pieces.join('，')}。`
+    return '这次方向偏了，避开这些字再看部首。'
+  },
+
+  buildResultReview(attempts) {
+    if (!attempts || attempts.length === 0) return ''
+    const best = attempts.reduce((result, attempt) => {
+      const s = attempt.result.summary
+      return {
+        correct: Math.max(result.correct, s.correctCount || 0),
+        pinyin: Math.max(result.pinyin, (s.pinyinCount || 0) + (s.partialCount || 0)),
+        present: Math.max(result.present, s.presentCount || 0),
+      }
+    }, { correct: 0, pinyin: 0, present: 0 })
+    const parts = []
+    if (best.correct > 0) parts.push(`最多命中 ${best.correct} 个位置`)
+    if (best.pinyin > 0) parts.push(`${best.pinyin} 个读音线索`)
+    if (best.present > 0) parts.push(`${best.present} 个错位字`)
+    return parts.length ? `复盘：${parts.join('，')}。` : '复盘：这题偏难，下一局从常见成语试起。'
   },
 
   // ============ 拼音查找 ============
@@ -318,7 +365,7 @@ Page({
       suggestions.push(`上一轮的「${absentChars}」都不在答案中，尽量避开这些字`)
     }
     if (suggestions.length === 0) {
-      suggestions.push('💡 可以从常见成语开始尝试，如「一心一意」「画龙点睛」')
+      suggestions.push('可以从常见成语开始尝试，如「一心一意」「画龙点睛」')
     }
 
     this.setData({ showHint: true, hintMessages: suggestions })
@@ -330,8 +377,8 @@ Page({
     const won = this.data.status === 'won'
     const n = this.data.attempts.length
     const title = won
-      ? `🏮 Wordle（成语版） · ${n}/6`
-      : `🏮 Wordle（成语版） · X/6`
+      ? `部首猜词 · ${n}/6`
+      : `部首猜词 · X/6`
 
     return {
       title: `${title}\n${grid}\n\n${this.data.praiseText}`,
@@ -364,6 +411,7 @@ Page({
   },
 
   saveGame(state) {
+    if (this._practiceMode) return
     try {
       wx.setStorageSync(this.SAVE_KEY, {
         date: this.data.date,

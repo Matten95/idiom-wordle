@@ -1,0 +1,88 @@
+<view class="page">
+  <view class="header">
+    <view class="header-back" bindtap="onGoHome">← 返回</view>
+    <view class="header-title">提示猜词</view>
+    <view class="header-spacer"></view>
+  </view>
+
+  <view class="timer-section" wx:if="{{status === 'playing'}}">
+    <view class="timer-ring {{timerUrgent ? 'urgent' : ''}}">
+      <text class="timer-text">{{timerSeconds}}</text>
+    </view>
+    <text class="timer-label">秒</text>
+  </view>
+
+  <view class="story-card">
+    <view class="story-meta">
+      <text class="story-tag">{{difficultyText}}</text>
+      <text class="story-tag ghost">{{themeName}}</text>
+      <text class="story-tag source">{{sourceName}}</text>
+    </view>
+    <text class="story-hook">{{storyHook}}</text>
+  </view>
+
+  <view class="hints-area">
+    <view class="hint-card {{item.className}}"
+      wx:for="{{hintCards}}" wx:key="index">
+      <text class="hint-word">{{item.displayText}}</text>
+    </view>
+  </view>
+
+  <view class="progress" wx:if="{{status === 'playing'}}">
+    <text class="progress-text">提示 {{currentHintNumber}} / 5</text>
+    <view class="progress-dots">
+      <view class="dot {{item.className}}" wx:for="{{progressDots}}" wx:key="index"></view>
+    </view>
+  </view>
+
+  <view class="skip-section" wx:if="{{status === 'playing'}}">
+    <view class="btn-skip {{skipEnabled ? 'enabled' : ''}}" bindtap="onSkip">
+      <text>{{skipText}}</text>
+    </view>
+  </view>
+
+  <view class="input-section" wx:if="{{status === 'playing'}}">
+    <view class="input-boxes" bindtap="onTapInputArea">
+      <view class="input-char-box {{item.className}}" wx:for="{{inputBoxes}}" wx:key="index">
+        <text class="input-char-text">{{item.char}}</text>
+      </view>
+    </view>
+    <view class="input-status" wx:if="{{inputStatus}}">
+      <text class="input-status-text {{inputStatus}}">
+        <block wx:if="{{inputStatus === 'valid'}}">在词库中</block>
+        <block wx:elif="{{inputStatus === 'loose'}}">不像常见成语，换个方向</block>
+      </text>
+    </view>
+    <input class="keyboard-input" type="text" focus="{{inputFocused}}"
+      bindinput="onInputChange" bindfocus="onInputFocus" bindblur="onInputBlur" confirm-type="done" bindconfirm="onSubmitGuess"
+      adjust-position="{{true}}" hold-keyboard="{{true}}" cursor-spacing="20"/>
+    <view class="actions">
+      <button class="btn btn-clear" bindtap="onClearInput">清空</button>
+      <button class="btn btn-submit {{canSubmit ? '' : 'disabled'}}" bindtap="onSubmitGuess" disabled="{{!canSubmit}}">猜！</button>
+    </view>
+  </view>
+
+  <view class="result-overlay" wx:if="{{showResult}}">
+    <view class="result-card">
+      <view class="result-title" wx:if="{{status === 'won'}}">{{rating}}</view>
+      <view class="result-title" wx:else>继续加油</view>
+      <view class="result-score" wx:if="{{status === 'won'}}">
+        <text class="score-num">{{score}}</text>
+        <text class="score-label">分</text>
+      </view>
+      <view class="result-answer">
+        <text class="answer-label">答案：</text>
+        <text class="answer-text">{{idiomText}}</text>
+      </view>
+      <view class="result-hints">
+        <text class="hint-chain-title">提示词链：</text>
+        <block wx:for="{{hintChain}}" wx:key="index">
+          <text class="hint-chain-item">{{item.index}}.{{item.word}}  </text>
+        </block>
+      </view>
+      <button class="btn btn-again" bindtap="onPlayAgain">再来一局</button>
+      <button class="btn btn-share" open-type="share">分享战绩</button>
+      <view class="btn-back" bindtap="onGoHome">返回首页</view>
+    </view>
+  </view>
+</view>

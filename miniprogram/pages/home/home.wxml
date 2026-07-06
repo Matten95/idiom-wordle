@@ -1,101 +1,73 @@
 <view class="page">
-
-  <view class="hero">
-    <view class="hero-icon">🏮</view>
-    <view class="hero-title">Wordle 成语版</view>
-    <view class="hero-subtitle">每天一个成语，与好友比试身手</view>
-  </view>
-
-  <!-- 今日谜题卡片 -->
-  <view class="today-card">
-    <view class="today-meta">
-      <text class="today-date">📅 {{dateDisplay}}</text>
-      <text class="today-label">每日谜题</text>
-    </view>
-
-    <!-- 部首提示 -->
-    <view class="hint-row">
-      <view class="hint-cell" wx:for="{{hintRadicals}}" wx:key="index">
-        <text wx:if="{{item !== '?'}}" class="hint-char hint-{{hintPositions[index] || 'center'}}">{{item}}</text>
-        <text wx:else class="hint-q">?</text>
-      </view>
-    </view>
-    <text class="hint-label">部首提示（共4个部首，显示其中2个）</text>
-  </view>
-
-  <!-- 状态提示 -->
-  <view class="status-bar" wx:if="{{streakDays >= 3 || todayPlayed}}">
-    <view class="status-item" wx:if="{{streakDays >= 3}}">
-      <text class="status-icon">🔥</text>
-      <text class="status-text">连击 {{streakDays}} 天</text>
-    </view>
-    <view class="status-item" wx:if="{{todayPlayed}}">
-      <text class="status-icon">✅</text>
-      <text class="status-text">今日已完成</text>
-    </view>
-  </view>
-
-  <!-- 开始按钮 -->
-  <view class="actions">
-    <button class="btn-start" bindtap="onStartGame">
-      <text class="btn-start-icon">🎯</text>
-      <text class="btn-start-text">{{todayPlayed ? '查看今日战绩' : '开始今天的挑战'}}</text>
-    </button>
-    <button class="btn-practice" bindtap="onStartPractice">
-      <text class="btn-start-icon">🎮</text>
-      <text class="btn-start-text">自由练习</text>
-    </button>
-  </view>
-
-  <!-- 玩法说明 -->
-  <view class="rules-card">
-    <view class="rules-title">📖 玩法说明</view>
-
-    <view class="rule-step">
-      <view class="rule-num">1</view>
-      <view class="rule-content">
-        <text class="rule-title">猜一个四字成语</text>
-        <text class="rule-desc">你有 6 次机会，根据部首提示猜出今天的成语</text>
-      </view>
-    </view>
-
-    <view class="rule-step">
-      <view class="rule-num">2</view>
-      <view class="rule-content">
-        <text class="rule-title">提交后得到颜色反馈</text>
-        <view class="color-legend">
-          <view class="color-item"><view class="color-box correct">字</view><text>字对位对</text></view>
-          <view class="color-item"><view class="color-box pinyin">字</view><text>同音不同字</text></view>
-          <view class="color-item"><view class="color-box present">字</view><text>字对位不对</text></view>
-          <view class="color-item"><view class="color-box partial">字</view><text>拼音部分对</text></view>
-          <view class="color-item"><view class="color-box absent">字</view><text>都不对</text></view>
+  <view class="home-shell">
+    <view class="topline">
+      <view class="title-block">
+        <text class="brand-title">成语日课</text>
+        <view class="date-row">
+          <text class="today-date">{{dateDisplay}}</text>
+          <text class="puzzle-number">{{puzzleNumberText}}</text>
         </view>
       </view>
+      <view class="status-pill {{statusClass}}">{{statusText}}</view>
     </view>
 
-    <view class="rule-step">
-      <view class="rule-num">3</view>
-      <view class="rule-content">
-        <text class="rule-title">分享战绩给朋友</text>
-        <text class="rule-desc">猜完后可以分享 emoji 战绩，和朋友比试比试</text>
+    <view class="puzzle-paper">
+      <view class="paper-head">
+        <text class="paper-kicker">今日谜题笺</text>
+        <text class="paper-seal">日课</text>
+      </view>
+
+      <view class="hint-row">
+        <view class="hint-cell {{item.toneClass}}" wx:for="{{hintCells}}" wx:key="key">
+          <text class="cell-index">{{item.indexLabel}}</text>
+          <text wx:if="{{item.hasHint}}" class="hint-char {{item.positionClass}}">{{item.radical}}</text>
+          <text wx:else class="hint-q">?</text>
+        </view>
+      </view>
+
+      <view class="paper-meta">
+        <text>{{revealedCountText}}</text>
+        <text>拼音反馈</text>
+        <text>{{streakText}}</text>
+      </view>
+
+      <button class="primary-cta" bindtap="onStartGame">{{primaryCtaText}}</button>
+    </view>
+
+    <view class="secondary-grid">
+      <view class="secondary-action action-hint" bindtap="onIdiomMatch">
+        <text class="action-name">提示猜词</text>
+        <text class="action-desc">读线索猜成语</text>
+      </view>
+      <view class="secondary-action action-practice" bindtap="onStartPractice">
+        <text class="action-name">自由练习</text>
+        <text class="action-desc">常见题热身</text>
+      </view>
+      <view class="secondary-action action-two" bindtap="onTwoPlayer">
+        <text class="action-name">双人对战</text>
+        <text class="action-desc">一人出题一人猜</text>
+      </view>
+    </view>
+
+    <view class="retention-strip">
+      <view class="note-block">
+        <text class="note-label">今日札记</text>
+        <text class="note-text">{{dailyNote}}</text>
+      </view>
+      <view class="chip-row">
+        <text class="status-chip" wx:for="{{statusChips}}" wx:key="key">{{item.text}}</text>
+      </view>
+    </view>
+
+    <view class="quiet-links">
+      <view class="quiet-link" bindtap="onLeaderboard">
+        <text class="quiet-title">好友榜</text>
+        <text class="quiet-desc">看看今日排名</text>
+      </view>
+      <view class="quiet-link" bindtap="onProfile">
+        <text class="quiet-title">我的印记</text>
+        <text class="quiet-desc">回看历史记录</text>
       </view>
     </view>
   </view>
-
-  <!-- 底部导航 -->
-  <view class="tab-bar">
-    <view class="tab-item active">
-      <text class="tab-icon">🏠</text>
-      <text class="tab-text">首页</text>
-    </view>
-    <view class="tab-item" bindtap="onLeaderboard">
-      <text class="tab-icon">🏆</text>
-      <text class="tab-text">排行</text>
-    </view>
-    <view class="tab-item" bindtap="onProfile">
-      <text class="tab-icon">👤</text>
-      <text class="tab-text">我的</text>
-    </view>
-  </view>
-
 </view>

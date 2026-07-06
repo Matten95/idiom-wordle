@@ -5,6 +5,7 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 
 // 内联词库（120条，从 idioms.json 精简）
 const IDIOMS = require('./idioms.json')
+const DEFAULT_MAX_LEVEL = 2
 
 function hashDate(dateStr) {
   let hash = 0
@@ -27,7 +28,7 @@ function getToday() {
 
 exports.main = async (event, context) => {
   const date = event.date || getToday()
-  const pool = IDIOMS.idioms
+  const pool = IDIOMS.idioms.filter(item => item.level <= DEFAULT_MAX_LEVEL)
   const index = hashDate(date) % pool.length
   const idiom = JSON.parse(JSON.stringify(pool[index]))
 

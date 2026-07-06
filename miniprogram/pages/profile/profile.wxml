@@ -6,14 +6,14 @@
     <view class="player-avatar-wrap">
       <view class="player-avatar {{player.gender === 'male' ? 'male' : player.gender === 'female' ? 'female' : ''}}" bindtap="onShowEditor">
         <image wx:if="{{player.avatar}}" class="avatar-img" src="{{player.avatar}}" mode="aspectFill" />
-        <text wx:else class="avatar-emoji">{{player.gender === 'male' ? '🧑' : player.gender === 'female' ? '👩' : '👤'}}</text>
-        <view class="avatar-camera-tip"><text>📷</text></view>
+        <text wx:else class="avatar-emoji">{{player.gender === 'male' ? '男' : player.gender === 'female' ? '女' : '人'}}</text>
+        <view class="avatar-camera-tip"><text>换</text></view>
       </view>
       <view class="player-basic">
         <text class="player-name">{{player.nickname || '未设置昵称'}}</text>
-        <text class="player-city" wx:if="{{player.city}}">📍 {{player.city}}</text>
+        <text class="player-city" wx:if="{{player.city}}">{{player.city}}</text>
       </view>
-      <view class="player-edit-btn" bindtap="onShowEditor"><text>✎ 编辑</text></view>
+      <view class="player-edit-btn" bindtap="onShowEditor"><text>编辑</text></view>
     </view>
     <view class="player-signature" wx:if="{{player.signature}}">
       <text>「{{player.signature}}」</text>
@@ -34,7 +34,7 @@
 
   <!-- 猜词分布 -->
   <view class="section">
-    <view class="section-title">📊 猜词分布</view>
+    <view class="section-title">猜词分布</view>
     <view class="dist-chart">
       <view class="dist-bar-row" wx:for="{{distBars}}" wx:key="index">
         <text class="dist-label">{{index + 1}}次</text>
@@ -44,13 +44,13 @@
     <view class="dist-summary" wx:if="{{totalPlayed > 0}}"><text>共 {{totalPlayed}} 场 · 胜率 {{winRate}}% · 平均 {{avgAttempts}} 次猜中</text></view>
     <view class="dist-empty" wx:if="{{totalPlayed === 0}}">
       <text>还没有游戏记录，去猜今天的成语吧！</text>
-      <view class="dist-empty-btn" bindtap="onGoHome">🎯 开始今天的挑战</view>
+      <view class="dist-empty-btn" bindtap="onGoHome">开始今天的挑战</view>
     </view>
   </view>
 
   <!-- 近期记录 -->
   <view class="section" wx:if="{{recentGames.length > 0}}">
-    <view class="section-title">📅 近期谜底</view>
+    <view class="section-title">近期谜底</view>
     <view class="recent-list">
       <view class="recent-item" wx:for="{{recentGames}}" wx:key="date">
         <view class="recent-left"><text class="recent-date">{{item.dateDisplay}}</text><text class="recent-answer">{{item.answerText}}</text></view>
@@ -61,7 +61,7 @@
 
   <!-- 设置区域 -->
   <view class="section settings-section">
-    <view class="section-title">⚙️ 设置</view>
+    <view class="section-title">设置</view>
     <view class="setting-item" bindtap="onClearHistory" wx:if="{{totalPlayed > 0}}">
       <text class="setting-text">清除游戏记录</text><text class="setting-arrow">›</text>
     </view>
@@ -85,8 +85,8 @@
       <text class="editor-label">头像</text>
       <view class="avatar-picker" bindtap="onChooseAvatar">
         <image wx:if="{{editAvatar}}" class="avatar-pick-img" src="{{editAvatar}}" mode="aspectFill" />
-        <text wx:else class="avatar-pick-placeholder">👤</text>
-        <view class="avatar-pick-overlay"><text>📷 更换</text></view>
+        <text wx:else class="avatar-pick-placeholder">人</text>
+        <view class="avatar-pick-overlay"><text>更换</text></view>
       </view>
     </view>
 
@@ -95,7 +95,7 @@
       <text class="editor-label">昵称</text>
       <input class="editor-input"
         placeholder="给自己起个响亮的昵称"
-        placeholder-style="color:#64748B;"
+        placeholder-style="color:#59647a;"
         value="{{editNickname}}"
         hold-keyboard="{{true}}"
         bindinput="onNickInput"
@@ -106,9 +106,9 @@
     <view class="editor-field">
       <text class="editor-label">性别</text>
       <view class="gender-group">
-        <view class="gender-option {{editGender === 'male' ? 'selected' : ''}}" bindtap="onSelectGender" data-gender="male"><text>🧑 男</text></view>
-        <view class="gender-option {{editGender === 'female' ? 'selected' : ''}}" bindtap="onSelectGender" data-gender="female"><text>👩 女</text></view>
-        <view class="gender-option {{editGender === '' ? 'selected' : ''}}" bindtap="onSelectGender" data-gender=""><text>⚪ 保密</text></view>
+        <view class="gender-option {{editGender === 'male' ? 'selected' : ''}}" bindtap="onSelectGender" data-gender="male"><text>男</text></view>
+        <view class="gender-option {{editGender === 'female' ? 'selected' : ''}}" bindtap="onSelectGender" data-gender="female"><text>女</text></view>
+        <view class="gender-option {{editGender === '' ? 'selected' : ''}}" bindtap="onSelectGender" data-gender=""><text>保密</text></view>
       </view>
     </view>
 
@@ -117,7 +117,7 @@
       <text class="editor-label">城市</text>
       <input class="editor-input"
         placeholder="你的城市"
-        placeholder-style="color:#64748B;"
+        placeholder-style="color:#59647a;"
         value="{{editCity}}"
         hold-keyboard="{{true}}"
         bindinput="onCityInput"
@@ -129,7 +129,7 @@
       <text class="editor-label">个性签名</text>
       <textarea class="editor-textarea"
         placeholder="写一句个性签名..."
-        placeholder-style="color:#64748B;"
+        placeholder-style="color:#59647a;"
         value="{{editSignature}}"
         auto-height
         hold-keyboard="{{true}}"
@@ -146,7 +146,7 @@
 
 <!-- 底部导航 -->
 <view class="tab-bar">
-  <view class="tab-item" bindtap="onGoHome"><text class="tab-icon">🏠</text><text class="tab-text">首页</text></view>
-  <view class="tab-item" bindtap="onGoRank"><text class="tab-icon">🏆</text><text class="tab-text">排行</text></view>
-  <view class="tab-item active"><text class="tab-icon">👤</text><text class="tab-text">我的</text></view>
+  <view class="tab-item" bindtap="onGoHome"><text class="tab-icon">首</text><text class="tab-text">首页</text></view>
+  <view class="tab-item" bindtap="onGoRank"><text class="tab-icon">榜</text><text class="tab-text">排行</text></view>
+  <view class="tab-item active"><text class="tab-icon">我</text><text class="tab-text">我的</text></view>
 </view>

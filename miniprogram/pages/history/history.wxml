@@ -1,15 +1,15 @@
 <view class="page">
 
-  <view class="section-title">🏆 {{dateTitle}}</view>
+  <view class="section-title">{{dateTitle}}</view>
 
   <!-- 排行列表 -->
   <view class="rank-list">
     <view class="rank-item" wx:for="{{rankList}}" wx:key="index">
       <!-- 排名徽章 -->
       <view class="rank-badge {{item.rank === 1 ? 'gold' : item.rank === 2 ? 'silver' : item.rank === 3 ? 'bronze' : ''}}">
-        <text wx:if="{{item.rank === 1}}">🥇</text>
-        <text wx:elif="{{item.rank === 2}}">🥈</text>
-        <text wx:elif="{{item.rank === 3}}">🥉</text>
+        <text wx:if="{{item.rank === 1}}" class="rank-medal">一</text>
+        <text wx:elif="{{item.rank === 2}}" class="rank-medal">二</text>
+        <text wx:elif="{{item.rank === 3}}" class="rank-medal">三</text>
         <text wx:else class="rank-num">{{item.rank}}</text>
       </view>
 
@@ -31,7 +31,7 @@
 
   <!-- 空状态 -->
   <view class="empty-state" wx:if="{{rankList.length === 0}}">
-    <text class="empty-icon">🏮</text>
+    <text class="empty-icon">榜</text>
     <text class="empty-text">还没有游戏记录</text>
     <text class="empty-sub">快去猜今天的成语吧！</text>
   </view>
@@ -39,15 +39,15 @@
   <!-- 底部导航 -->
   <view class="tab-bar">
     <view class="tab-item" bindtap="onGoHome">
-      <text class="tab-icon">🏠</text>
+      <text class="tab-icon">首</text>
       <text class="tab-text">首页</text>
     </view>
     <view class="tab-item active">
-      <text class="tab-icon">🏆</text>
+      <text class="tab-icon">榜</text>
       <text class="tab-text">排行</text>
     </view>
     <view class="tab-item" bindtap="onGoProfile">
-      <text class="tab-icon">👤</text>
+      <text class="tab-icon">我</text>
       <text class="tab-text">我的</text>
     </view>
   </view>
