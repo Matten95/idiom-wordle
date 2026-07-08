@@ -163,17 +163,15 @@ test('5.3 返回完整数据', () => {
 // ============================================================
 //  6. 部首提示逻辑 (100分)
 // ============================================================
-test('6.1 getHintPositions 返回2个位置', () => {
+test('6.1 getHintPositions 返回3个位置', () => {
   const d = getDailyIdiom()
-  const pos = getHintPositions(undefined, d.radicalPositions)
-  assert(pos.length === 2, `应返回2个位置, 得${pos.length}`)
+  const pos = getHintPositions(undefined, d.radicalPositions, d.radicals)
+  assert(pos.length === 3, `应返回3个位置, 得${pos.length}`)
 })
-test('6.2 位置0始终被包含', () => {
+test('6.2 提示位置合理', () => {
   const d = getDailyIdiom()
-  const pos = getHintPositions(undefined, d.radicalPositions)
-  // 位置0可能在也可能不在（如果它是center则不在）
-  // 只验证有返回值且合理
-  assert(pos.length >= 1, '至少1个提示')
+  const pos = getHintPositions(undefined, d.radicalPositions, d.radicals)
+  assert(pos.length === 3, '应给出3个开局部首')
   pos.forEach(p => assert(p >= 0 && p <= 3, `位置${p}越界`))
 })
 

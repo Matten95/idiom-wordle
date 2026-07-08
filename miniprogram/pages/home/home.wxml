@@ -1,20 +1,39 @@
 <view class="page">
   <view class="home-shell">
-    <view class="topline">
-      <view class="title-block">
-        <text class="brand-title">成语日课</text>
-        <view class="date-row">
-          <text class="today-date">{{dateDisplay}}</text>
-          <text class="puzzle-number">{{puzzleNumberText}}</text>
-        </view>
+    <view class="player-strip">
+      <view class="player-avatar">
+        <text>{{playerInitial}}</text>
       </view>
+      <view class="player-main">
+        <text class="player-name">{{playerName}}</text>
+        <text class="player-title">{{playerTitle}}</text>
+      </view>
+      <view class="player-token">
+        <text class="token-label">连胜</text>
+        <text class="token-value">{{streakDisplay}}</text>
+      </view>
+      <view class="player-token seal-token">
+        <text class="token-label">今日</text>
+        <text class="token-value">{{todaySealText}}</text>
+      </view>
+    </view>
+
+    <view class="hall-banner">
+      <text class="hall-title">成语挑战大厅</text>
+      <text class="hall-rally">{{rallyText}}</text>
       <view class="status-pill {{statusClass}}">{{statusText}}</view>
     </view>
 
-    <view class="puzzle-paper">
-      <view class="paper-head">
-        <text class="paper-kicker">今日谜题笺</text>
-        <text class="paper-seal">日课</text>
+    <view class="hero-card">
+      <view class="hero-head">
+        <view class="hero-copy">
+          <text class="hero-kicker">今日主局</text>
+          <text class="hero-title">部首猜词</text>
+          <text class="hero-subtitle">{{dateDisplay}} · {{puzzleNumberText}}</text>
+        </view>
+        <view class="hero-seal">
+          <text>首</text>
+        </view>
       </view>
 
       <view class="hint-row">
@@ -25,48 +44,102 @@
         </view>
       </view>
 
-      <view class="paper-meta">
+      <view class="hero-meta">
         <text>{{revealedCountText}}</text>
-        <text>拼音反馈</text>
+        <text>6 次机会</text>
         <text>{{streakText}}</text>
       </view>
 
       <button class="primary-cta" bindtap="onStartGame">{{primaryCtaText}}</button>
-    </view>
-
-    <view class="secondary-grid">
-      <view class="secondary-action action-hint" bindtap="onIdiomMatch">
-        <text class="action-name">提示猜词</text>
-        <text class="action-desc">读线索猜成语</text>
-      </view>
-      <view class="secondary-action action-practice" bindtap="onStartPractice">
-        <text class="action-name">自由练习</text>
-        <text class="action-desc">常见题热身</text>
-      </view>
-      <view class="secondary-action action-two" bindtap="onTwoPlayer">
-        <text class="action-name">双人对战</text>
-        <text class="action-desc">一人出题一人猜</text>
+      <view class="guide-trigger" bindtap="onShowGuide">
+        <text class="guide-trigger-icon">?</text>
+        <text class="guide-trigger-text">查看玩法说明</text>
       </view>
     </view>
 
-    <view class="retention-strip">
-      <view class="note-block">
-        <text class="note-label">今日札记</text>
-        <text class="note-text">{{dailyNote}}</text>
-      </view>
-      <view class="chip-row">
-        <text class="status-chip" wx:for="{{statusChips}}" wx:key="key">{{item.text}}</text>
+    <view class="mode-grid">
+      <view class="mode-card {{item.className}}" wx:for="{{actionCards}}" wx:key="key" data-action="{{item.action}}" bindtap="onActionTap">
+        <text class="mode-badge">{{item.badge}}</text>
+        <view class="mode-icon">
+          <text>{{item.icon}}</text>
+        </view>
+        <view class="mode-copy">
+          <text class="mode-name">{{item.name}}</text>
+          <text class="mode-desc">{{item.desc}}</text>
+        </view>
       </view>
     </view>
 
-    <view class="quiet-links">
-      <view class="quiet-link" bindtap="onLeaderboard">
-        <text class="quiet-title">好友榜</text>
-        <text class="quiet-desc">看看今日排名</text>
+    <view class="progress-panel">
+      <view class="stamp-card">
+        <text class="stamp-title">今日印章</text>
+        <text class="stamp-value">{{todaySealText}}</text>
       </view>
-      <view class="quiet-link" bindtap="onProfile">
-        <text class="quiet-title">我的印记</text>
-        <text class="quiet-desc">回看历史记录</text>
+      <view class="stamp-card">
+        <text class="stamp-title">今日目标</text>
+        <text class="stamp-value">{{todayGoalText}}</text>
+      </view>
+      <view class="stamp-card">
+        <text class="stamp-title">题池</text>
+        <text class="stamp-value">{{streakText}}</text>
+      </view>
+    </view>
+
+    <view class="mini-links">
+      <view class="mini-link" bindtap="onLeaderboard">
+        <text class="mini-icon">榜</text>
+        <text class="mini-text">历史印记</text>
+      </view>
+      <view class="mini-link" bindtap="onProfile">
+        <text class="mini-icon">印</text>
+        <text class="mini-text">我的印记</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="guide-overlay" wx:if="{{showGuide}}" bindtap="onHideGuide">
+    <view class="guide-card" catchtap="onStopGuideTap">
+      <view class="guide-head">
+        <view>
+          <text class="guide-kicker">说明书</text>
+          <text class="guide-title">部首猜词怎么玩</text>
+        </view>
+        <view class="guide-close" bindtap="onHideGuide">关</view>
+      </view>
+
+      <view class="guide-section">
+        <view class="guide-step">
+          <text class="guide-step-num">一</text>
+          <text class="guide-step-text">看部首和位置，先锁定可能的字。</text>
+        </view>
+        <view class="guide-step">
+          <text class="guide-step-num">二</text>
+          <text class="guide-step-text">猜 4 字成语，绿色越多越接近破题。</text>
+        </view>
+        <view class="guide-step">
+          <text class="guide-step-num">三</text>
+          <text class="guide-step-text">每次提交后看颜色，分清字、音、位置。</text>
+        </view>
+        <view class="guide-step">
+          <text class="guide-step-num">四</text>
+          <text class="guide-step-text">排除灰色线索，优先试常见成语。</text>
+        </view>
+      </view>
+
+      <view class="guide-section">
+        <text class="guide-section-title">颜色反馈</text>
+        <view class="guide-colors">
+          <view class="guide-color-item"><text class="color-dot color-correct"></text><text>字和位置都对</text></view>
+          <view class="guide-color-item"><text class="color-dot color-pinyin"></text><text>读音相同</text></view>
+          <view class="guide-color-item"><text class="color-dot color-present"></text><text>答案里有这个字</text></view>
+          <view class="guide-color-item"><text class="color-dot color-partial"></text><text>读音有接近处</text></view>
+          <view class="guide-color-item"><text class="color-dot color-absent"></text><text>暂时没有匹配</text></view>
+        </view>
+      </view>
+
+      <view class="guide-tip">
+        <text class="guide-tip-title">小技巧</text>
+        <text class="guide-tip-text">第一次猜错后，游戏页会出现“需要提示”，会根据上一轮结果给你一条更人性化的线索。</text>
       </view>
     </view>
   </view>

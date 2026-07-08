@@ -6,6 +6,7 @@ const { fetchRanking } = require('../../utils/cloud')
 Page({
   data: {
     dateTitle: '',
+    dateSubtitle: '',
     rankList: [],
     source: 'local',  // 'cloud' | 'local'
   },
@@ -17,8 +18,13 @@ Page({
   loadData() {
     const today = getToday()
     const parts = today.split('-')
-    const dateTitle = `${parseInt(parts[1])}月${parseInt(parts[2])}日 排行`
+    const dateTitle = `${parseInt(parts[1])}月${parseInt(parts[2])}日 历史印记`
     var self = this
+
+    this.setData({
+      dateTitle: dateTitle,
+      dateSubtitle: '正在翻开今日印册...',
+    })
 
     // 尝试从云端获取排行
     fetchRanking(today).then(function (result) {
@@ -38,6 +44,7 @@ Page({
       })
       self.setData({
         dateTitle: dateTitle,
+        dateSubtitle: buildSubtitle(rankList.length),
         rankList: rankList,
         source: result.source || 'local',
       })
@@ -58,7 +65,11 @@ Page({
           boxes: self.buildBoxes(h.won, h.attempts, h.emojiGrid),
         }
       })
-      self.setData({ dateTitle: dateTitle, rankList: rankList, source: 'local' })
+      self.setData({ dateTitle: dateTitle, dateSubtitle: buildSubtitle(rankList.length), rankList: rankList, source: 'local' })
+    }
+
+    function buildSubtitle(count) {
+      return count > 0 ? '收录 ' + count + ' 枚今日破题印记' : '还没有新的破题足迹'
     }
   },
 

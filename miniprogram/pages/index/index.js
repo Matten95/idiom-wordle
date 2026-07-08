@@ -1,7 +1,8 @@
-const { getDailyIdiom, getRandomIdiom, getToday, getHintPositions } = require('../../utils/daily')
+const { getDailyIdiom, getRandomIdiom, getToday, getYesterday, getHintPositions } = require('../../utils/daily')
 const { scoreGuess, parsePinyin, getPraise, loadHistory } = require('../../utils/engine')
 const { getPlayerName } = require('../../utils/player')
 const { submitGameResult } = require('../../utils/cloud')
+const { logEvent } = require('../../utils/telemetry')
 const idiomsData = require('../../data/idioms')
 
 Page({
@@ -10,7 +11,7 @@ Page({
     dateDisplay: '',
     date: '',
     hintTitle: '今日部首',
-    // 部首提示（2/4 显示，其余为 '?'）
+    // 部首提示（3/4 显示，其余为 '?'）
     hintRadicals: ['?', '?', '?', '?'],
     hintPositions: ['', '', '', ''],  // left/right/top/bottom/center
 
@@ -34,7 +35,7 @@ Page({
     showAnswer: false,
     roundFeedback: '',
     resultReview: '',
-    inputGuideText: '点字格输入，颜色会给线索',
+    inputGuideText: '看部首猜 4 字成语，颜色会提示字、音、位置',
     // 提示系统
     showHint: false,
     hintMessages: [],
@@ -109,7 +110,7 @@ Page({
 
     // 计算部首提示（与首页一致）
     const posData = idiom.radicalPositions || []
-    const positions = getHintPositions(today, posData)
+    const positions = getHintPositions(today, posData, idiom.radicals)
     const hintRadicals = ['?', '?', '?', '?']
     const hintPositions = ['', '', '', '']
     positions.forEach(p => {
@@ -218,6 +219,12 @@ Page({
 
     // 计分
     const result = scoreGuess(chars, guessPinyin, this.answerIdiom)
+    logEvent('submit_guess', {
+      mode: this._practiceMode ? 'practice' : 'daily',
+      date: this.data.date,
+      row: this.data.attempts.length + 1,
+      validIdiom: Boolean(this._idiomSet && this._idiomSet.has(guessText)),
+    })
 
     // 更新 attempts
     const attempts = [...this.data.attempts, { chars, pinyin: guessPinyin, result }]
@@ -277,6 +284,11 @@ Page({
         answer: this.answerIdiom,
         attempts,
         status: newStatus,
+      })
+      logEvent(newStatus === 'won' ? 'win' : 'lose', {
+        mode: 'daily',
+        date: this.data.date,
+        attempts: attempts.length,
       })
     }
 
@@ -342,6 +354,11 @@ Page({
   onRequestHint() {
     const lastAttempt = this.data.attempts[this.data.attempts.length - 1]
     if (!lastAttempt) return
+    logEvent('use_hint', {
+      mode: this._practiceMode ? 'practice' : 'daily',
+      date: this.data.date,
+      attempts: this.data.attempts.length,
+    })
 
     const result = lastAttempt.result
     const suggestions = []
@@ -363,6 +380,10 @@ Page({
     if (knownChars.length === 0 && pinyinMatches.length === 0 && presentChars.length === 0) {
       const absentChars = result.chars.map(c => c.char).join('')
       suggestions.push(`上一轮的「${absentChars}」都不在答案中，尽量避开这些字`)
+      suggestions.push('答案仍是常见四字成语，先围绕已给部首想常见字')
+    }
+    if (this.data.attempts.length === 2 && suggestions.length < 2) {
+      suggestions.push('先别猜冷僻词，把已命中的字音和部首放在一起想')
     }
     if (suggestions.length === 0) {
       suggestions.push('可以从常见成语开始尝试，如「一心一意」「画龙点睛」')
@@ -373,6 +394,7 @@ Page({
 
   // ============ 分享 ============
   onShare() {
+    logEvent('share_tap', { page: 'index', status: this.data.status, attempts: this.data.attempts.length })
     const grid = this.data.attempts.map(a => a.result.emojiString).join('\n')
     const won = this.data.status === 'won'
     const n = this.data.attempts.length
@@ -430,10 +452,7 @@ Page({
     const lastDate = wx.getStorageSync('lastPlayDate') || ''
 
     let streak = this.getStreak()
-    const yesterday = (() => {
-      const d = new Date(Date.now() - 86400000)
-      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-    })()
+    const yesterday = getYesterday(today)
 
     if (lastDate === yesterday) {
       streak += 1

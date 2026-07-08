@@ -1,8 +1,14 @@
 <view class="page">
 
-  <view class="section-title">{{dateTitle}}</view>
+  <view class="history-banner">
+    <view class="history-title-copy">
+      <text class="section-title">{{dateTitle}}</text>
+      <text class="section-subtitle">{{dateSubtitle}}</text>
+    </view>
+    <view class="history-seal"><text>印</text></view>
+  </view>
 
-  <!-- 排行列表 -->
+  <!-- 印记列表 -->
   <view class="rank-list">
     <view class="rank-item" wx:for="{{rankList}}" wx:key="index">
       <!-- 排名徽章 -->
@@ -15,6 +21,7 @@
 
       <!-- 玩家信息 -->
       <view class="rank-center">
+        <text class="rank-kicker">第 {{item.rank}} 枚印记</text>
         <text class="rank-player">{{item.player}}</text>
         <text class="rank-answer">{{item.answerText}}</text>
       </view>
@@ -29,9 +36,34 @@
     </view>
   </view>
 
+  <view class="collection-panel">
+    <view class="collection-head">
+      <view>
+        <text class="collection-title">印册进度</text>
+        <text class="collection-sub">每天一枚，连起来就是你的成语足迹。</text>
+      </view>
+      <view class="collection-count">{{rankList.length}}/7</view>
+    </view>
+    <view class="stamp-row">
+      <view class="stamp-slot done">
+        <text class="stamp-mark">今</text>
+        <text class="stamp-name">今日</text>
+      </view>
+      <view class="stamp-slot next">
+        <text class="stamp-mark">明</text>
+        <text class="stamp-name">明日</text>
+      </view>
+      <view class="stamp-slot next">
+        <text class="stamp-mark">友</text>
+        <text class="stamp-name">好友局</text>
+      </view>
+    </view>
+    <view class="collection-cta" bindtap="onGoHome">继续破题盖章</view>
+  </view>
+
   <!-- 空状态 -->
   <view class="empty-state" wx:if="{{rankList.length === 0}}">
-    <text class="empty-icon">榜</text>
+    <text class="empty-icon">印</text>
     <text class="empty-text">还没有游戏记录</text>
     <text class="empty-sub">快去猜今天的成语吧！</text>
   </view>
@@ -43,8 +75,8 @@
       <text class="tab-text">首页</text>
     </view>
     <view class="tab-item active">
-      <text class="tab-icon">榜</text>
-      <text class="tab-text">排行</text>
+      <text class="tab-icon">印</text>
+      <text class="tab-text">印记</text>
     </view>
     <view class="tab-item" bindtap="onGoProfile">
       <text class="tab-icon">我</text>

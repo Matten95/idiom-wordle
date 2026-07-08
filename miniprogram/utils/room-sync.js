@@ -1,6 +1,6 @@
 /**
  * 房间实时同步工具
- * 封装云数据库 .watch() + polling 降级
+ * 封装云函数轮询 + 提示集合 watch
  */
 const { isCloudReady } = require('./cloud')
 
@@ -28,32 +28,7 @@ function watchRoom(roomCode, callbacks) {
     console.warn('Cloud not ready, using polling for room watch')
     return _pollRoom(roomCode, callbacks)
   }
-
-  if (shouldUsePolling()) {
-    return _pollRoom(roomCode, callbacks)
-  }
-
-  var db = wx.cloud.database()
-  var watcher = db.collection('idiom_rooms')
-    .where({ roomCode: roomCode })
-    .watch({
-      onChange: function (snapshot) {
-        if (snapshot.docs && snapshot.docs.length > 0) {
-          callbacks.onUpdate(snapshot.docs[0])
-        }
-      },
-      onError: function (err) {
-        console.warn('Room watch error, falling back to polling:', err)
-        watcher.close()
-        _pollRoom(roomCode, callbacks)
-      }
-    })
-
-  return {
-    close: function () {
-      try { watcher.close() } catch (e) { /* ignore */ }
-    }
-  }
+  return _pollRoom(roomCode, callbacks)
 }
 
 /** Polling 降级：定时读取房间状态 */
@@ -65,6 +40,8 @@ function _pollRoom(roomCode, callbacks) {
     }).then(function (res) {
       if (res.result && res.result.ok && res.result.room) {
         callbacks.onUpdate(res.result.room)
+      } else if (callbacks.onError) {
+        callbacks.onError(new Error(res.result && res.result.error || '房间同步失败'))
       }
     }).catch(function (err) {
       console.warn('Room poll error:', err)
@@ -94,6 +71,7 @@ function watchHints(roomCode, round, callbacks) {
   }
 
   var db = wx.cloud.database()
+  var fallback = null
   var watcher = db.collection('idiom_hints_live')
     .where({ roomCode: roomCode, round: round })
     .watch({
@@ -106,13 +84,14 @@ function watchHints(roomCode, round, callbacks) {
       onError: function (err) {
         console.warn('Hints watch error, falling back to polling:', err)
         watcher.close()
-        _pollHints(roomCode, round, callbacks)
+        fallback = _pollHints(roomCode, round, callbacks)
       }
     })
 
   return {
     close: function () {
       try { watcher.close() } catch (e) { /* ignore */ }
+      if (fallback) { fallback.close(); fallback = null }
     }
   }
 }
@@ -127,12 +106,14 @@ function _pollHints(roomCode, round, callbacks) {
     }).then(function (res) {
       if (res.result && res.result.ok) {
         var hints = (res.result.hints || [])
-          .map(function (doc) { return { word: doc.hintWord, submittedAt: doc.submittedAt } })
+          .map(function (doc) { return { word: doc.word || doc.hintWord, submittedAt: doc.submittedAt } })
           .sort(function (a, b) { return (a.submittedAt || 0) - (b.submittedAt || 0) })
         if (hints.length !== lastCount) {
           lastCount = hints.length
           callbacks.onUpdate(hints)
         }
+      } else if (callbacks.onError) {
+        callbacks.onError(new Error(res.result && res.result.error || '线索同步失败'))
       }
     }).catch(function (err) {
       console.warn('Hints poll error:', err)

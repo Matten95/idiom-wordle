@@ -15,10 +15,18 @@
   <view class="story-card">
     <view class="story-meta">
       <text class="story-tag">{{difficultyText}}</text>
-      <text class="story-tag ghost">{{themeName}}</text>
-      <text class="story-tag source">{{sourceName}}</text>
+      <text class="story-tag ghost" wx:if="{{storyHintUnlocked}}">{{themeName}}</text>
+      <text class="story-tag source" wx:if="{{storyHintUnlocked}}">{{sourceName}}</text>
+      <text class="story-tag source" wx:else>锦囊待解锁</text>
     </view>
-    <text class="story-hook">{{storyHook}}</text>
+    <text class="story-hook" wx:if="{{storyHintUnlocked}}">{{storyHintText}}</text>
+    <view class="story-lock" wx:else>
+      <text class="story-lock-title">高分锦囊待开</text>
+      <text class="story-lock-text">{{storyHintStatusText}}</text>
+      <view class="btn-story-hint {{storyHintLoading ? 'loading' : ''}}" bindtap="onUnlockStoryHint">
+        <text>{{storyHintButtonText}}</text>
+      </view>
+    </view>
   </view>
 
   <view class="hints-area">
@@ -36,9 +44,11 @@
   </view>
 
   <view class="skip-section" wx:if="{{status === 'playing'}}">
-    <view class="btn-skip {{skipEnabled ? 'enabled' : ''}}" bindtap="onSkip">
+    <view class="btn-skip {{skipClassName}}" bindtap="onSkip">
       <text>{{skipText}}</text>
     </view>
+    <text class="skip-hint">{{skipHintText}}</text>
+    <text class="score-rule">{{scoreRuleText}}</text>
   </view>
 
   <view class="input-section" wx:if="{{status === 'playing'}}">
@@ -50,8 +60,11 @@
     <view class="input-status" wx:if="{{inputStatus}}">
       <text class="input-status-text {{inputStatus}}">
         <block wx:if="{{inputStatus === 'valid'}}">在词库中</block>
-        <block wx:elif="{{inputStatus === 'loose'}}">不像常见成语，换个方向</block>
+        <block wx:elif="{{inputStatus === 'loose'}}">词库暂无，先猜常见四字成语</block>
       </text>
+    </view>
+    <view class="guess-assist" wx:if="{{guessAssistText}}">
+      <text>{{guessAssistText}}</text>
     </view>
     <input class="keyboard-input" type="text" focus="{{inputFocused}}"
       bindinput="onInputChange" bindfocus="onInputFocus" bindblur="onInputBlur" confirm-type="done" bindconfirm="onSubmitGuess"
@@ -64,15 +77,28 @@
 
   <view class="result-overlay" wx:if="{{showResult}}">
     <view class="result-card">
+      <view class="result-burst" wx:if="{{resultBurstText}}">
+        <text>{{resultBurstText}}</text>
+      </view>
       <view class="result-title" wx:if="{{status === 'won'}}">{{rating}}</view>
       <view class="result-title" wx:else>继续加油</view>
       <view class="result-score" wx:if="{{status === 'won'}}">
         <text class="score-num">{{score}}</text>
-        <text class="score-label">分</text>
+        <text class="score-label">分 / 100</text>
+      </view>
+      <view class="score-breakdown" wx:if="{{scoreBreakdownText}}">
+        <text>{{scoreBreakdownText}}</text>
+      </view>
+      <view class="result-reward" wx:if="{{resultRewardText}}">
+        <text>{{resultRewardText}}</text>
       </view>
       <view class="result-answer">
         <text class="answer-label">答案：</text>
         <text class="answer-text">{{idiomText}}</text>
+      </view>
+      <view class="result-story" wx:if="{{storyHook}}">
+        <text class="result-story-title">答案复盘</text>
+        <text class="result-story-text">{{storyHook}}</text>
       </view>
       <view class="result-hints">
         <text class="hint-chain-title">提示词链：</text>
@@ -81,7 +107,7 @@
         </block>
       </view>
       <button class="btn btn-again" bindtap="onPlayAgain">再来一局</button>
-      <button class="btn btn-share" open-type="share">分享战绩</button>
+      <button class="btn btn-share" open-type="share">发给好友挑战</button>
       <view class="btn-back" bindtap="onGoHome">返回首页</view>
     </view>
   </view>

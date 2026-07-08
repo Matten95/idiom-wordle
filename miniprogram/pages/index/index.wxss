@@ -1,40 +1,62 @@
 /* ========== 页面布局 ========== */
 .page {
   min-height: 100vh;
-  padding: calc(92rpx + env(safe-area-inset-top)) 24rpx 136rpx;
+  padding: calc(72rpx + env(safe-area-inset-top)) 24rpx 280rpx;
   box-sizing: border-box;
   background:
-    linear-gradient(180deg, #f1f5ff 0%, #e4ebfb 55%, #edf3ff 100%),
-    repeating-linear-gradient(90deg, rgba(55, 86, 152, 0.032) 0, rgba(55, 86, 152, 0.032) 1rpx, transparent 1rpx, transparent 26rpx);
+    radial-gradient(circle at 14% 8%, rgba(255, 218, 142, 0.55) 0, rgba(255, 218, 142, 0) 190rpx),
+    radial-gradient(circle at 88% 10%, rgba(108, 167, 225, 0.42) 0, rgba(108, 167, 225, 0) 210rpx),
+    linear-gradient(180deg, #eaf4ff 0%, #f8efe0 54%, #eaf2ff 100%);
   color: #18213d;
 }
 
 /* ========== 头部 ========== */
 .header {
+  position: relative;
   width: 100%;
   max-width: 650rpx;
-  margin: 0 auto 20rpx;
-  text-align: center;
+  min-height: 118rpx;
+  margin: 0 auto 18rpx;
+  padding: 22rpx 126rpx 22rpx 24rpx;
+  border-radius: 22rpx;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(49, 95, 181, 0.96) 0%, rgba(92, 125, 205, 0.94) 100%);
+  box-shadow: 0 18rpx 38rpx rgba(28, 57, 112, 0.2);
+  box-sizing: border-box;
+}
+
+.header::after {
+  content: '';
+  position: absolute;
+  right: -22rpx;
+  bottom: -42rpx;
+  width: 168rpx;
+  height: 168rpx;
+  border-radius: 50%;
+  border: 22rpx solid rgba(255, 255, 255, 0.16);
 }
 
 .header-title {
-  color: #18213d;
-  font-size: 40rpx;
-  font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: 0;
+  position: relative;
+  z-index: 1;
+  color: #ffffff;
+  font-size: 42rpx;
+  font-weight: 900;
+  line-height: 1.12;
 }
 
 .header-info {
+  position: relative;
+  z-index: 1;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
-  gap: 16rpx;
-  margin-top: 10rpx;
+  gap: 12rpx;
+  margin-top: 14rpx;
 }
 
 .puzzle-num {
-  color: #59647a;
+  color: rgba(255, 255, 255, 0.86);
   font-size: 24rpx;
   line-height: 1.2;
 }
@@ -42,10 +64,11 @@
 .practice-badge {
   padding: 5rpx 14rpx;
   border-radius: 999rpx;
-  color: #9a621e;
-  background: #fff3d7;
-  border: 1rpx solid rgba(240, 166, 65, 0.24);
+  color: #ffffff;
+  background: linear-gradient(135deg, #e45b58 0%, #f0a641 100%);
+  border: 1rpx solid rgba(255, 255, 255, 0.36);
   font-size: 20rpx;
+  font-weight: 800;
   line-height: 1.2;
 }
 
@@ -55,21 +78,29 @@
   align-items: center;
   justify-content: center;
   gap: 10rpx;
-  margin: 4rpx auto 10rpx;
+  width: 100%;
+  max-width: 650rpx;
+  margin: 0 auto 12rpx;
+  padding: 12rpx 18rpx;
+  border-radius: 18rpx;
+  border: 1rpx solid rgba(240, 166, 65, 0.2);
+  background: rgba(255, 246, 223, 0.74);
+  box-sizing: border-box;
 }
 
 .hint-bar-icon {
-  width: 38rpx;
-  height: 38rpx;
-  border-radius: 8rpx;
-  border: 1rpx solid rgba(228, 91, 88, 0.5);
-  color: #e45b58;
+  width: 42rpx;
+  height: 42rpx;
+  border-radius: 12rpx;
+  color: #fff9ee;
+  background: #e45b58;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18rpx;
-  font-weight: 700;
+  font-size: 20rpx;
+  font-weight: 900;
   line-height: 1;
+  transform: rotate(4deg);
 }
 
 .hint-bar-label {
@@ -83,15 +114,16 @@
   display: flex;
   gap: 12rpx;
   justify-content: center;
-  margin: 0 auto 16rpx;
+  margin: 0 auto 18rpx;
+  max-width: 650rpx;
 }
 
 .hint-cell {
   width: 112rpx;
   height: 112rpx;
-  border-radius: 12rpx;
-  border: 2rpx dashed rgba(89, 100, 122, 0.28);
-  background: rgba(255, 255, 255, 0.72);
+  border-radius: 18rpx;
+  border: 2rpx dashed rgba(154, 98, 30, 0.3);
+  background: rgba(255, 255, 255, 0.64);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -124,6 +156,7 @@
   flex-direction: column;
   gap: 8rpx;
   margin: 8rpx auto;
+  max-width: 650rpx;
 }
 
 .grid-row {
@@ -135,7 +168,7 @@
 .char-cell {
   width: 112rpx;
   height: 112rpx;
-  border-radius: 12rpx;
+  border-radius: 18rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -145,6 +178,7 @@
   color: #18213d;
   position: relative;
   box-sizing: border-box;
+  box-shadow: 0 8rpx 18rpx rgba(28, 57, 112, 0.06);
   transition: background-color 0.2s, border-color 0.2s, opacity 0.2s;
 }
 
@@ -210,7 +244,7 @@
 
 .hint-toggle {
   padding: 16rpx 20rpx;
-  border-radius: 12rpx;
+  border-radius: 18rpx;
   border: 2rpx dashed rgba(240, 166, 65, 0.5);
   color: #9a621e;
   background: rgba(255, 243, 215, 0.54);
@@ -225,7 +259,7 @@
 
 .hint-messages {
   padding: 18rpx 20rpx;
-  border-radius: 12rpx;
+  border-radius: 18rpx;
   border: 1rpx solid rgba(240, 166, 65, 0.22);
   background: rgba(255, 243, 215, 0.62);
 }
@@ -247,7 +281,7 @@
   max-width: 620rpx;
   margin: 10rpx auto 0;
   padding: 14rpx 18rpx;
-  border-radius: 12rpx;
+  border-radius: 18rpx;
   color: #315fb5;
   background: rgba(237, 243, 255, 0.86);
   border: 1rpx solid rgba(49, 95, 181, 0.14);
@@ -275,7 +309,7 @@
 .input-char-box {
   width: 112rpx;
   height: 112rpx;
-  border-radius: 12rpx;
+  border-radius: 18rpx;
   border: 2rpx dashed rgba(49, 95, 181, 0.42);
   background-color: rgba(255, 255, 255, 0.72);
   display: flex;
@@ -363,18 +397,29 @@
 
 /* ========== 操作按钮 ========== */
 .actions {
+  position: fixed;
+  left: 50%;
+  bottom: calc(132rpx + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 70;
   display: flex;
   gap: 12rpx;
-  margin: 12rpx auto 0;
-  width: 100%;
+  margin: 0 auto;
+  width: calc(100% - 96rpx);
   max-width: 600rpx;
+  padding: 10rpx;
+  border-radius: 999rpx;
+  background: rgba(234, 244, 255, 0.88);
+  box-shadow: 0 16rpx 36rpx rgba(28, 57, 112, 0.16);
+  backdrop-filter: blur(12rpx);
+  box-sizing: border-box;
 }
 
 .btn {
   flex: 1;
   min-height: 82rpx;
   padding: 0;
-  border-radius: 12rpx;
+  border-radius: 999rpx;
   font-size: 30rpx;
   line-height: 82rpx;
   text-align: center;
@@ -392,10 +437,10 @@
 
 .btn-submit {
   flex: 2;
-  background: linear-gradient(135deg, #315fb5 0%, #5f73c7 100%);
+  background: linear-gradient(135deg, #e45b58 0%, #f0a641 100%);
   color: #ffffff;
-  font-weight: 700;
-  box-shadow: 0 10rpx 22rpx rgba(49, 95, 181, 0.16);
+  font-weight: 900;
+  box-shadow: 0 16rpx 30rpx rgba(228, 91, 88, 0.22);
 }
 
 .btn-submit.disabled {
@@ -437,10 +482,10 @@
   width: 100%;
   max-width: 600rpx;
   padding: 42rpx 34rpx;
-  border-radius: 16rpx;
-  border: 1rpx solid rgba(55, 86, 152, 0.18);
-  background: linear-gradient(180deg, #ffffff 0%, #edf3ff 100%);
-  box-shadow: 0 22rpx 60rpx rgba(28, 57, 112, 0.22);
+  border-radius: 24rpx;
+  border: 2rpx solid rgba(240, 166, 65, 0.28);
+  background: linear-gradient(180deg, rgba(255, 252, 242, 0.98) 0%, rgba(255, 238, 202, 0.98) 100%);
+  box-shadow: 0 24rpx 62rpx rgba(151, 97, 28, 0.22);
   text-align: center;
   box-sizing: border-box;
   animation: slideUp 0.3s ease;
@@ -455,9 +500,10 @@
   width: 68rpx;
   height: 68rpx;
   margin: 0 auto 12rpx;
-  border-radius: 12rpx;
-  border: 2rpx solid rgba(228, 91, 88, 0.52);
-  color: #e45b58;
+  border-radius: 18rpx;
+  border: none;
+  background: #e45b58;
+  color: #fff9ee;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -467,7 +513,7 @@
 }
 
 .praise-text {
-  color: #315fb5;
+  color: #18213d;
   font-size: 34rpx;
   font-weight: 700;
   line-height: 1.35;
@@ -476,8 +522,8 @@
 .answer-reveal {
   margin: 18rpx 0;
   padding: 20rpx;
-  border-radius: 12rpx;
-  background-color: #edf3ff;
+  border-radius: 18rpx;
+  background: rgba(255, 255, 255, 0.68);
   box-sizing: border-box;
 }
 
@@ -525,7 +571,7 @@
 .result-review {
   margin-top: 12rpx;
   padding: 14rpx 18rpx;
-  border-radius: 12rpx;
+  border-radius: 18rpx;
   color: #59647a;
   background: rgba(255, 255, 255, 0.68);
   border: 1rpx solid rgba(49, 95, 181, 0.12);
@@ -538,12 +584,13 @@
   min-height: 82rpx;
   margin-top: 18rpx;
   padding: 0;
-  border-radius: 12rpx;
-  background: linear-gradient(135deg, #315fb5 0%, #5f73c7 100%);
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, #e45b58 0%, #f0a641 100%);
   color: #ffffff;
   font-size: 30rpx;
   line-height: 82rpx;
-  font-weight: 700;
+  font-weight: 900;
+  box-shadow: 0 16rpx 30rpx rgba(228, 91, 88, 0.2);
 }
 
 .btn-share::after {

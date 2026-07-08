@@ -1,6 +1,6 @@
-/* 全局样式 — 白玉靛蓝主题 */
+/* 全局样式 — 成语挑战大厅主题 */
 page {
-  background-color: #F1F5FF;
+  background-color: #eaf4ff;
   font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
   color: #18213d;
   font-size: 16px;
@@ -22,31 +22,33 @@ page {
 
 /* 通用按钮 */
 .btn-primary {
-  background: linear-gradient(135deg, #315fb5 0%, #5f73c7 100%);
+  background: linear-gradient(135deg, #e45b58 0%, #f0a641 100%);
   color: #ffffff;
-  border-radius: 12rpx;
+  border-radius: 999rpx;
   padding: 20rpx 40rpx;
   font-size: 32rpx;
   text-align: center;
   border: none;
+  box-shadow: 0 14rpx 28rpx rgba(228, 91, 88, 0.18);
 }
 .btn-primary:active {
   opacity: 0.8;
 }
 .btn-primary[disabled] {
-  background: rgba(237, 243, 255, 0.86);
-  color: rgba(49, 95, 181, 0.42);
-  border: 1rpx solid rgba(49, 95, 181, 0.14);
+  background: rgba(255, 255, 255, 0.62);
+  color: rgba(89, 100, 122, 0.56);
+  border: 1rpx solid rgba(240, 166, 65, 0.18);
+  box-shadow: none;
 }
 
 /* 通用卡片 */
 .card {
-  background-color: rgba(255, 255, 255, 0.9);
-  border: 1rpx solid rgba(55, 86, 152, 0.16);
-  border-radius: 16rpx;
+  background: linear-gradient(180deg, rgba(255, 252, 242, 0.96) 0%, rgba(255, 238, 202, 0.92) 100%);
+  border: 1rpx solid rgba(240, 166, 65, 0.24);
+  border-radius: 22rpx;
   padding: 30rpx;
   margin: 20rpx;
-  box-shadow: 0 10rpx 28rpx rgba(28, 57, 112, 0.08);
+  box-shadow: 0 16rpx 34rpx rgba(151, 97, 28, 0.12);
 }
 
 /* ========== 底部导航栏（全局） ========== */
@@ -57,12 +59,13 @@ page {
   right: 0;
   display: flex;
   justify-content: space-around;
-  background: rgba(255, 255, 255, 0.96);
-  border-top: 1rpx solid rgba(55, 86, 152, 0.16);
+  background: rgba(234, 244, 255, 0.94);
+  border-top: 1rpx solid rgba(255, 255, 255, 0.74);
   padding: 14rpx 0;
   padding-bottom: calc(14rpx + env(safe-area-inset-bottom));
   z-index: 50;
-  box-shadow: 0 -8rpx 24rpx rgba(28, 57, 112, 0.08);
+  box-shadow: 0 -10rpx 28rpx rgba(28, 57, 112, 0.12);
+  backdrop-filter: blur(12rpx);
 }
 .tab-item {
   display: flex;
@@ -85,14 +88,15 @@ page {
   transform: translateX(-50%);
   width: 40rpx;
   height: 4rpx;
-  background: linear-gradient(90deg, #315fb5 0%, #5f73c7 100%);
+  background: linear-gradient(90deg, #e45b58 0%, #f0a641 100%);
   border-radius: 2rpx;
 }
 .tab-icon {
   width: 42rpx;
   height: 42rpx;
   border-radius: 50%;
-  border: 1rpx solid rgba(89, 100, 122, 0.28);
+  border: 1rpx solid rgba(49, 95, 181, 0.18);
+  background: rgba(255, 255, 255, 0.72);
   color: #59647a;
   font-size: 22rpx;
   font-weight: 700;
@@ -106,8 +110,9 @@ page {
 .tab-item.active .tab-icon {
   transform: translateY(-2rpx);
   color: #ffffff;
-  background: linear-gradient(135deg, #315fb5 0%, #5f73c7 100%);
-  border-color: #315fb5;
+  background: linear-gradient(135deg, #315fb5 0%, #f0a641 100%);
+  border-color: rgba(255, 255, 255, 0.76);
+  box-shadow: 0 8rpx 18rpx rgba(28, 57, 112, 0.16);
 }
 .tab-text {
   font-size: 24rpx;
@@ -116,8 +121,8 @@ page {
   transition: color 0.2s;
 }
 .tab-item.active .tab-text {
-  color: #315fb5;
-  font-weight: 600;
+  color: #18213d;
+  font-weight: 800;
 }
 
 /* 全局动画 */

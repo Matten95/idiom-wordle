@@ -55,7 +55,7 @@
   </view>
 
   <!-- 提示系统 -->
-  <view class="hint-section" wx:if="{{status === 'playing' && attempts.length >= 3}}">
+  <view class="hint-section" wx:if="{{status === 'playing' && attempts.length >= 1}}">
     <view class="hint-toggle" bindtap="onRequestHint" wx:if="{{!showHint}}">
       <text>需要提示？</text>
     </view>
@@ -169,7 +169,7 @@
     </view>
     <view class="tab-item" bindtap="onGoRank">
       <text class="tab-icon">榜</text>
-      <text class="tab-text">排行</text>
+      <text class="tab-text">印记</text>
     </view>
     <view class="tab-item" bindtap="onGoProfile">
       <text class="tab-icon">我</text>

@@ -1,4 +1,6 @@
 const { getDailyIdiom, getToday, getHintPositions } = require('../../utils/daily')
+const { getPlayerName } = require('../../utils/player')
+const { logEvent } = require('../../utils/telemetry')
 
 Page({
   data: {
@@ -12,8 +14,17 @@ Page({
     streakText: '',
     dailyNote: '',
     statusChips: [],
+    playerName: '',
+    playerInitial: '成',
+    playerTitle: '童生',
+    streakDisplay: '0天',
+    todaySealText: '待破题',
+    todayGoalText: '首胜 +1',
+    actionCards: [],
+    rallyText: '',
     streakDays: 0,
     todayPlayed: false,
+    showGuide: false,
   },
 
   onLoad() {
@@ -22,6 +33,7 @@ Page({
 
   onShow() {
     this.refreshHome()
+    logEvent('enter_home', { date: getToday() })
   },
 
   refreshHome() {
@@ -35,42 +47,70 @@ Page({
       const lastPlayDate = wx.getStorageSync('lastPlayDate') || ''
       const todayPlayed = lastPlayDate === today
       const statusChips = this.buildStatusChips(streakDays, todayPlayed)
+      const playerName = getPlayerName()
 
       this.setData({
         dateDisplay,
         puzzleNumberText: `第 ${idiom.puzzleNumber} 题`,
-        statusText: todayPlayed ? '今日已完成' : '今日待挑战',
+        statusText: todayPlayed ? '今日已通关' : '今日未破题',
         statusClass: todayPlayed ? 'status-done' : 'status-pending',
-        primaryCtaText: todayPlayed ? '查看今日战绩' : '开始今日挑战',
+        primaryCtaText: todayPlayed ? '回看今日战绩' : '开猜今日成语',
         hintCells,
         revealedCountText: `已揭 ${revealedCount}/4`,
-        streakText: streakDays > 0 ? `连胜 ${streakDays} 天` : '大众题池',
+        streakText: streakDays > 0 ? `连胜 ${streakDays} 天` : '常见题池',
         dailyNote: this.pickDailyNote(idiom.puzzleNumber),
         statusChips,
+        playerName,
+        playerInitial: this.buildInitial(playerName),
+        playerTitle: this.buildPlayerTitle(streakDays),
+        streakDisplay: `${streakDays}天`,
+        todaySealText: todayPlayed ? '已盖章' : '待破题',
+        todayGoalText: todayPlayed ? '去好友局复仇' : '首胜 +1 印章',
+        actionCards: this.buildActionCards(todayPlayed),
+        rallyText: todayPlayed ? '今日已通关，去历史印记看看谁更快。' : '今日谜题已上新，先破主局再练手。',
         streakDays,
         todayPlayed,
       })
     } catch (e) {
       console.error('home onLoad error:', e)
+      const playerName = getPlayerName()
       this.setData({
         dateDisplay: '今日',
         puzzleNumberText: '每日谜题',
         statusText: '稍后再试',
         statusClass: 'status-pending',
-        primaryCtaText: '开始今日挑战',
+        primaryCtaText: '开猜今日成语',
         hintCells: this.buildFallbackCells(),
         revealedCountText: '已揭 0/4',
-        streakText: '大众题池',
+        streakText: '常见题池',
         dailyNote: '好题像一枚印章，落下去才知道轻重。',
         statusChips: [{ key: 'chance', text: '6 次机会' }],
+        playerName,
+        playerInitial: this.buildInitial(playerName),
+        playerTitle: this.buildPlayerTitle(0),
+        streakDisplay: '0天',
+        todaySealText: '待破题',
+        todayGoalText: '首胜 +1 印章',
+        actionCards: this.buildActionCards(false),
+        rallyText: '今日谜题已上新，先破主局再练手。',
       })
     }
+  },
+
+  buildInitial(name) {
+    return Array.from(name || '成')[0] || '成'
+  },
+
+  buildPlayerTitle(streakDays) {
+    if (streakDays >= 7) return '举人'
+    if (streakDays >= 3) return '秀才'
+    return '童生'
   },
 
   buildHints(idiom) {
     const rads = idiom.radicals || []
     const posData = idiom.radicalPositions || []
-    const pickPos = getHintPositions(idiom.date, posData)
+    const pickPos = getHintPositions(idiom.date, posData, rads)
     const indexLabels = ['一', '二', '三', '四']
     const hintCells = indexLabels.map((label, index) => {
       const hasHint = Boolean(pickPos.includes(index) && rads[index])
@@ -112,6 +152,38 @@ Page({
     return chips
   },
 
+  buildActionCards(todayPlayed) {
+    return [
+      {
+        key: 'hint',
+        icon: '谜',
+        name: '提示猜词',
+        desc: '五条线索破题',
+        badge: '新题',
+        className: 'action-hint',
+        action: 'hint',
+      },
+      {
+        key: 'practice',
+        icon: '练',
+        name: '自由练习',
+        desc: '常见题热身',
+        badge: todayPlayed ? '再来' : '热身',
+        className: 'action-practice',
+        action: 'practice',
+      },
+      {
+        key: 'two',
+        icon: '友',
+        name: '好友开局',
+        desc: '邀好友互猜',
+        badge: '可邀',
+        className: 'action-two',
+        action: 'two',
+      },
+    ]
+  },
+
   pickDailyNote(puzzleNumber) {
     const notes = [
       '典故常把一瞬的选择，压成四个字。',
@@ -124,6 +196,7 @@ Page({
   },
 
   onStartGame() {
+    logEvent('start_daily', { date: getToday(), from: 'home' })
     wx.navigateTo({ url: '/pages/index/index' })
   },
 
@@ -146,4 +219,21 @@ Page({
   onTwoPlayer() {
     wx.navigateTo({ url: '/pages/room-lobby/room-lobby' })
   },
+
+  onActionTap(e) {
+    const action = e.currentTarget.dataset.action
+    if (action === 'hint') this.onIdiomMatch()
+    else if (action === 'practice') this.onStartPractice()
+    else if (action === 'two') this.onTwoPlayer()
+  },
+
+  onShowGuide() {
+    this.setData({ showGuide: true })
+  },
+
+  onHideGuide() {
+    this.setData({ showGuide: false })
+  },
+
+  onStopGuideTap() {},
 })

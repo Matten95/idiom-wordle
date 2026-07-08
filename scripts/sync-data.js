@@ -15,6 +15,10 @@ const targets = [
     content: JSON.stringify(source) + '\n',
   },
   {
+    path: path.join(root, 'cloudfunctions/submitResult/idioms.json'),
+    content: JSON.stringify(source) + '\n',
+  },
+  {
     path: path.join(root, 'cloudfunctions/manageRoom/idioms.json'),
     content: JSON.stringify(source) + '\n',
   },

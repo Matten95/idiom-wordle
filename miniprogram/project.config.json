@@ -1,0 +1,12 @@
+{
+  "compileType": "miniprogram",
+  "miniprogramRoot": "./",
+  "cloudfunctionRoot": "../cloudfunctions/",
+  "appid": "wxdc7647ffd32e45f9",
+  "setting": {
+    "minifyWXML": true,
+    "minifyWXSS": true,
+    "urlCheck": true
+  },
+  "libVersion": "3.16.1"
+}

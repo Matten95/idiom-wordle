@@ -15,7 +15,15 @@ function hashDate(dateStr) {
 
 function getToday() {
   const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  const local = new Date(d.getTime() + 8 * 60 * 60000)
+  return `${local.getUTCFullYear()}-${String(local.getUTCMonth() + 1).padStart(2, '0')}-${String(local.getUTCDate()).padStart(2, '0')}`
+}
+
+function getYesterday(dateStr) {
+  const base = dateStr ? new Date(dateStr + 'T00:00:00+08:00') : new Date()
+  const d = new Date(base.getTime() - 86400000)
+  const local = new Date(d.getTime() + 8 * 60 * 60000)
+  return `${local.getUTCFullYear()}-${String(local.getUTCMonth() + 1).padStart(2, '0')}-${String(local.getUTCDate()).padStart(2, '0')}`
 }
 
 const EPOCH = '2026-01-01'
@@ -38,40 +46,44 @@ function getDefaultPool() {
   return IDIOMS_DATA.idioms.filter(item => item.level <= DEFAULT_MAX_LEVEL)
 }
 
-/** 用日期种子确定性地选 2 个部首提示位
- *  优先选有明确位置（left/right/top/bottom）的字
+const WEAK_RADICALS = new Set(['一', '丨', '丶', '丿', '乙', '亅', '亠', '冂', '冖', '凵', '彡'])
+
+/** 用日期种子确定性地选 3 个部首提示位
+ *  优先选有明确位置且信息量高的部首，避免固定暴露首字和重复部首。
  */
-function getHintPositions(dateStr, radicalPositions) {
+function getHintPositions(dateStr, radicalPositions, radicals) {
   const date = dateStr || getToday()
   const seed = hashDate(date + '_hint')
-
-  // 位置 0 固定（仅当它有明确位置时才提示）
-  const result = []
-  if (radicalPositions && radicalPositions[0] && radicalPositions[0] !== 'center') {
-    result.push(0)
-  }
-
-  // 从位置 1-3 中，优先选有明确位置的
+  const start = seed % 4
   const candidates = []
-  for (let i = 1; i <= 3; i++) {
+  for (let i = 0; i <= 3; i++) {
     const pos = radicalPositions ? radicalPositions[i] : 'center'
-    if (pos && pos !== 'center') {
-      candidates.push(i)  // 优先
-    }
-  }
-  // 如果连候选都没有，退而求其次用 center 位置的
-  if (candidates.length === 0) {
-    for (let i = 1; i <= 3; i++) candidates.push(i)
+    const radical = radicals ? radicals[i] : ''
+    const positionScore = pos && pos !== 'center' ? 2 : 0
+    const radicalScore = radical ? (WEAK_RADICALS.has(radical) ? 0 : 3) : 1
+    const seededRank = (i - start + 4) % 4
+    candidates.push({ index: i, radical, score: positionScore + radicalScore, seededRank })
   }
 
-  const pick = candidates[seed % candidates.length]
-  if (!result.includes(pick)) result.push(pick)
-  if (result.length < 2) {
-    const fallbackCandidates = [0, 1, 2, 3].filter(index => !result.includes(index))
-    const fallback = fallbackCandidates[(seed + 1) % fallbackCandidates.length]
+  const pool = candidates.sort((a, b) => (b.score - a.score) || (a.seededRank - b.seededRank))
+  const result = []
+  const usedRadicals = new Set()
+  pool.forEach(item => {
+    if (result.length >= 3) return
+    if (item.radical && usedRadicals.has(item.radical)) return
+    result.push(item.index)
+    if (item.radical) usedRadicals.add(item.radical)
+  })
+  pool.forEach(item => {
+    if (result.length >= 3) return
+    if (!result.includes(item.index)) result.push(item.index)
+  })
+
+  while (result.length < 3) {
+    const fallback = [0, 1, 2, 3].find(index => !result.includes(index))
+    if (fallback === undefined) break
     result.push(fallback)
   }
-
   return result
 }
 
@@ -83,4 +95,4 @@ function getRandomIdiom(level) {
   return JSON.parse(JSON.stringify(pool[idx]))
 }
 
-module.exports = { getDailyIdiom, getRandomIdiom, getToday, hashDate, getHintPositions }
+module.exports = { getDailyIdiom, getRandomIdiom, getToday, getYesterday, hashDate, getHintPositions }

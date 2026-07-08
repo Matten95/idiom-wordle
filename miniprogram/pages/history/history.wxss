@@ -3,28 +3,210 @@
   padding: calc(106rpx + env(safe-area-inset-top)) 24rpx 136rpx;
   box-sizing: border-box;
   background:
-    linear-gradient(180deg, #f1f5ff 0%, #e4ebfb 55%, #edf3ff 100%),
-    repeating-linear-gradient(90deg, rgba(55, 86, 152, 0.032) 0, rgba(55, 86, 152, 0.032) 1rpx, transparent 1rpx, transparent 26rpx);
+    radial-gradient(circle at 14% 7%, rgba(255, 218, 142, 0.5) 0, rgba(255, 218, 142, 0) 190rpx),
+    radial-gradient(circle at 88% 12%, rgba(108, 167, 225, 0.4) 0, rgba(108, 167, 225, 0) 210rpx),
+    linear-gradient(180deg, #eaf4ff 0%, #f8efe0 54%, #eaf2ff 100%);
   color: #18213d;
 }
 
-.section-title {
+.history-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
   max-width: 650rpx;
   margin: 0 auto 24rpx;
-  color: #18213d;
-  font-size: 36rpx;
-  font-weight: 700;
+  min-height: 126rpx;
+  padding: 24rpx 26rpx;
+  border-radius: 22rpx;
+  background: linear-gradient(135deg, rgba(49, 95, 181, 0.96) 0%, rgba(92, 125, 205, 0.94) 100%);
+  box-shadow: 0 18rpx 38rpx rgba(28, 57, 112, 0.2);
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+}
+
+.history-banner::after {
+  content: '';
+  position: absolute;
+  right: -24rpx;
+  bottom: -44rpx;
+  width: 166rpx;
+  height: 166rpx;
+  border-radius: 50%;
+  border: 22rpx solid rgba(255, 255, 255, 0.16);
+}
+
+.history-title-copy {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.section-title,
+.section-subtitle {
+  display: block;
   line-height: 1.2;
-  text-align: center;
+}
+
+.section-title {
+  color: #ffffff;
+  font-size: 36rpx;
+  font-weight: 900;
+}
+
+.section-subtitle {
+  margin-top: 10rpx;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 23rpx;
+}
+
+.history-seal {
+  position: relative;
+  z-index: 1;
+  width: 76rpx;
+  height: 76rpx;
+  border-radius: 18rpx;
+  background: #e45b58;
+  color: #fff9ee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34rpx;
+  font-weight: 900;
+  transform: rotate(5deg);
+  box-shadow: 0 10rpx 22rpx rgba(25, 45, 85, 0.18);
+  flex-shrink: 0;
 }
 
 .rank-list {
   display: flex;
   flex-direction: column;
-  gap: 12rpx;
+  gap: 14rpx;
   width: 100%;
   max-width: 650rpx;
   margin: 0 auto;
+}
+
+.collection-panel {
+  width: 100%;
+  max-width: 650rpx;
+  margin: 18rpx auto 0;
+  padding: 24rpx;
+  border-radius: 22rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 12rpx 28rpx rgba(28, 57, 112, 0.08);
+  backdrop-filter: blur(10rpx);
+  box-sizing: border-box;
+}
+
+.collection-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18rpx;
+  margin-bottom: 18rpx;
+}
+
+.collection-title,
+.collection-sub {
+  display: block;
+  line-height: 1.25;
+}
+
+.collection-title {
+  color: #18213d;
+  font-size: 28rpx;
+  font-weight: 900;
+}
+
+.collection-sub {
+  margin-top: 8rpx;
+  color: #59647a;
+  font-size: 23rpx;
+}
+
+.collection-count {
+  min-width: 78rpx;
+  padding: 8rpx 14rpx;
+  border-radius: 999rpx;
+  color: #ffffff;
+  background: linear-gradient(135deg, #e45b58 0%, #f0a641 100%);
+  font-size: 22rpx;
+  font-weight: 900;
+  line-height: 1.2;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.stamp-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12rpx;
+  margin-bottom: 18rpx;
+}
+
+.stamp-slot {
+  min-width: 0;
+  min-height: 106rpx;
+  border-radius: 18rpx;
+  border: 1rpx solid rgba(49, 95, 181, 0.12);
+  background: rgba(255, 255, 255, 0.68);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  box-sizing: border-box;
+}
+
+.stamp-slot.done {
+  background: linear-gradient(180deg, #fff3d7 0%, #ffffff 100%);
+  border-color: rgba(240, 166, 65, 0.28);
+}
+
+.stamp-mark {
+  width: 46rpx;
+  height: 46rpx;
+  border-radius: 14rpx;
+  background: #e45b58;
+  color: #fff9ee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  font-weight: 900;
+  transform: rotate(-4deg);
+}
+
+.stamp-slot.next .stamp-mark {
+  background: linear-gradient(135deg, #315fb5 0%, #f0a641 100%);
+}
+
+.stamp-name {
+  color: #18213d;
+  font-size: 22rpx;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.collection-cta {
+  min-height: 76rpx;
+  border-radius: 999rpx;
+  color: #ffffff;
+  background: linear-gradient(135deg, #e45b58 0%, #f0a641 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26rpx;
+  font-weight: 900;
+  box-shadow: 0 12rpx 24rpx rgba(228, 91, 88, 0.18);
+}
+
+.collection-cta:active {
+  opacity: 0.86;
+  transform: translateY(2rpx);
 }
 
 .rank-item {
@@ -32,10 +214,11 @@
   align-items: center;
   gap: 16rpx;
   padding: 20rpx;
-  border-radius: 14rpx;
-  border: 1rpx solid rgba(55, 86, 152, 0.16);
-  background: rgba(255, 255, 255, 0.86);
-  box-shadow: 0 8rpx 22rpx rgba(28, 57, 112, 0.06);
+  border-radius: 22rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 12rpx 28rpx rgba(28, 57, 112, 0.08);
+  backdrop-filter: blur(10rpx);
   box-sizing: border-box;
 }
 
@@ -43,8 +226,8 @@
   width: 56rpx;
   height: 56rpx;
   border-radius: 50%;
-  background: #edf3ff;
-  border: 1rpx solid rgba(89, 100, 122, 0.18);
+  background: #ffffff;
+  border: 1rpx solid rgba(49, 95, 181, 0.16);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -52,18 +235,19 @@
 }
 
 .rank-badge.gold {
-  background: #fff3d7;
-  border-color: rgba(240, 166, 65, 0.28);
+  background: linear-gradient(135deg, #f0a641 0%, #e45b58 100%);
+  border-color: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 8rpx 18rpx rgba(228, 91, 88, 0.18);
 }
 
 .rank-badge.silver {
-  background: #eef3f5;
-  border-color: rgba(49, 95, 181, 0.22);
+  background: linear-gradient(135deg, #315fb5 0%, #5f73c7 100%);
+  border-color: rgba(255, 255, 255, 0.72);
 }
 
 .rank-badge.bronze {
-  background: #fff0ef;
-  border-color: rgba(228, 91, 88, 0.24);
+  background: linear-gradient(135deg, #9a621e 0%, #f0a641 100%);
+  border-color: rgba(255, 255, 255, 0.72);
 }
 
 .rank-medal,
@@ -74,15 +258,15 @@
 }
 
 .rank-badge.gold .rank-medal {
-  color: #9a621e;
+  color: #ffffff;
 }
 
 .rank-badge.silver .rank-medal {
-  color: #315fb5;
+  color: #ffffff;
 }
 
 .rank-badge.bronze .rank-medal {
-  color: #e45b58;
+  color: #ffffff;
 }
 
 .rank-badge.gold .rank-num,
@@ -99,10 +283,17 @@
   min-width: 0;
 }
 
+.rank-kicker {
+  color: #e45b58;
+  font-size: 20rpx;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
 .rank-player {
   color: #18213d;
   font-size: 26rpx;
-  font-weight: 700;
+  font-weight: 900;
   line-height: 1.25;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -110,7 +301,7 @@
 }
 
 .rank-answer {
-  color: #59647a;
+  color: #9a621e;
   font-size: 28rpx;
   font-weight: 700;
   line-height: 1.2;
@@ -132,7 +323,7 @@
 }
 
 .rank-count.won {
-  color: #315fb5;
+  color: #23856d;
 }
 
 .rank-count.lost {
@@ -178,7 +369,7 @@
 }
 
 .guess-box.empty {
-  background-color: rgba(255, 255, 255, 0.48);
+  background-color: rgba(255, 255, 255, 0.62);
   border-color: rgba(89, 100, 122, 0.22);
 }
 
@@ -190,9 +381,10 @@
   max-width: 650rpx;
   margin: 150rpx auto 0;
   padding: 46rpx 28rpx;
-  border-radius: 16rpx;
-  border: 1rpx solid rgba(55, 86, 152, 0.16);
-  background: rgba(255, 255, 255, 0.72);
+  border-radius: 24rpx;
+  border: 2rpx solid rgba(240, 166, 65, 0.28);
+  background: linear-gradient(180deg, rgba(255, 252, 242, 0.96) 0%, rgba(255, 238, 202, 0.92) 100%);
+  box-shadow: 0 18rpx 38rpx rgba(151, 97, 28, 0.14);
   box-sizing: border-box;
 }
 
@@ -200,8 +392,9 @@
   width: 74rpx;
   height: 74rpx;
   border-radius: 50%;
-  border: 1rpx solid rgba(49, 95, 181, 0.28);
-  color: #315fb5;
+  border: 1rpx solid rgba(255, 255, 255, 0.72);
+  background: #e45b58;
+  color: #fff9ee;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -213,7 +406,7 @@
 .empty-text {
   color: #18213d;
   font-size: 28rpx;
-  font-weight: 700;
+  font-weight: 900;
   line-height: 1.3;
 }
 

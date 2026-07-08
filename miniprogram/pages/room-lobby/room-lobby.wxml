@@ -1,12 +1,45 @@
 <view class="page">
   <view class="header">
     <view class="header-back" bindtap="onGoHome">← 返回</view>
-    <view class="header-title">双人对战</view>
+    <view class="header-title">好友开局大厅</view>
     <view class="header-spacer"></view>
   </view>
 
   <view class="mode-intro">
-    <text>一人出题，一人猜词，轮流挑战看谁更快。</text>
+    <text>好友局 · 轮流出题猜词，看谁更快破题。</text>
+  </view>
+
+  <view class="room-steps">
+    <view class="room-step">
+      <text class="room-step-icon">开</text>
+      <text class="room-step-text">开房</text>
+    </view>
+    <view class="room-step">
+      <text class="room-step-icon">邀</text>
+      <text class="room-step-text">邀请</text>
+    </view>
+    <view class="room-step">
+      <text class="room-step-icon">战</text>
+      <text class="room-step-text">开局</text>
+    </view>
+  </view>
+
+  <view class="room-social-card">
+    <view class="social-player ready">
+      <text class="social-avatar">我</text>
+      <view class="social-copy">
+        <text class="social-name">{{playerName}}</text>
+        <text class="social-state">已就绪</text>
+      </view>
+    </view>
+    <view class="social-vs">对</view>
+    <view class="social-player waiting">
+      <text class="social-avatar">友</text>
+      <view class="social-copy">
+        <text class="social-name">好友席位</text>
+        <text class="social-state">待邀请</text>
+      </view>
+    </view>
   </view>
 
   <!-- 模式切换 -->
@@ -17,39 +50,46 @@
 
   <!-- 创建房间模式 -->
   <view class="card" wx:if="{{mode === 'create'}}">
-    <view class="card-title">创建房间</view>
-    <view class="label">回合数</view>
+    <view class="card-title">开一桌好友局</view>
+    <view class="label">选择局数</view>
     <view class="round-options">
-      <view class="round-opt {{totalRounds === 5 ? 'selected' : ''}}" bindtap="onSelectRounds" data-rounds="5">5 局</view>
+      <view class="round-opt {{totalRounds === 6 ? 'selected' : ''}}" bindtap="onSelectRounds" data-rounds="6">6 局</view>
       <view class="round-opt {{totalRounds === 10 ? 'selected' : ''}}" bindtap="onSelectRounds" data-rounds="10">10 局</view>
     </view>
+    <view class="round-note">偶数局更公平，双方猜词次数一样多。</view>
     <button class="btn-primary" bindtap="onCreateRoom" disabled="{{loading}}">
-      {{loading ? '创建中...' : '创建房间'}}
+      {{loading ? '开局令生成中...' : '生成房间码'}}
     </button>
   </view>
 
   <!-- 加入房间模式 -->
   <view class="card" wx:if="{{mode === 'join'}}">
-    <view class="card-title">加入房间</view>
-    <view class="label">输入4位房间码</view>
+    <view class="card-title">赴好友之约</view>
+    <view class="label">输入好友给你的 4 位房间码</view>
     <input class="code-input" type="text" placeholder="例如：ABCD" placeholder-style="color:#59647a;font-size:40rpx;"
       value="{{inputCode}}" bindinput="onCodeInput" maxlength="4" />
     <button class="btn-primary" bindtap="onJoinRoom" disabled="{{inputCode.length !== 4 || loading}}">
-      {{loading ? '加入中...' : '加入房间'}}
+      {{loading ? '入局中...' : '进入好友局'}}
     </button>
   </view>
 
   <!-- 错误提示 -->
   <view class="error-msg" wx:if="{{errorMsg}}">
-    <text>{{errorMsg}}</text>
+    <view class="error-badge">令</view>
+    <view class="error-copy">
+      <text class="error-title">掌柜提醒</text>
+      <text class="error-text">{{errorMsg}}</text>
+    </view>
   </view>
 
   <!-- 等待中 -->
   <view class="card waiting-card" wx:if="{{mode === 'waiting'}}">
     <view class="waiting-icon">等</view>
-    <view class="room-code-label">房间码</view>
+    <view class="waiting-title">好友席位已备好</view>
+    <view class="waiting-subtitle">把开局令发给好友，等他入席就能开战。</view>
+    <view class="room-code-label">好友开局令</view>
     <view class="room-code" bindtap="onCopyCode">{{roomCode}}</view>
-    <view class="room-code-hint">点击复制房间码，发送给好友</view>
+    <view class="room-code-hint">点一下复制开局令，发送给好友。</view>
 
     <view class="players-list">
       <view class="player-item" wx:for="{{players}}" wx:key="openid">
@@ -63,15 +103,15 @@
       <!-- 空位 -->
       <view class="player-item empty" wx:if="{{players.length < 2}}">
         <view class="player-avatar">空</view>
-        <view class="player-name empty-text">等待加入...</view>
+        <view class="player-name empty-text">好友席位预留中</view>
       </view>
     </view>
 
     <button class="btn-start" wx:if="{{isCreator}}" bindtap="onStartGame" disabled="{{!canStart || loading}}">
-      {{canStart ? '开始游戏' : '等待玩家加入...'}}
+      {{canStart ? '敲响开局鼓' : '等好友入席'}}
     </button>
-    <view class="waiting-hint" wx:else>等待房主开始游戏...</view>
+    <view class="waiting-hint" wx:else>房主正在备题，开局鼓一响就进场。</view>
 
-    <button class="btn-share-room" open-type="share">邀请微信好友</button>
+    <button class="btn-share-room" open-type="share">发给微信好友</button>
   </view>
 </view>

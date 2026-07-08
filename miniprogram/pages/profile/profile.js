@@ -84,7 +84,7 @@ Page({
       },
       fail: function (err) {
         if (err.errMsg.indexOf('cancel') === -1) {
-          wx.showToast({ title: '选取图片失败', icon: 'none' })
+          wx.showToast({ title: '头像没选上', icon: 'none' })
         }
       },
     })
@@ -100,34 +100,34 @@ Page({
     var avatarPath = this.data.editAvatar
 
     if (!nickname) {
-      wx.showToast({ title: '请输入昵称', icon: 'none' })
+      wx.showToast({ title: '先留个名号', icon: 'none' })
       return
     }
     if (nickname.length > 12) {
-      wx.showToast({ title: '昵称不能超过12个字', icon: 'none' })
+      wx.showToast({ title: '名号最多12字', icon: 'none' })
       return
     }
     if (city.length > 20) {
-      wx.showToast({ title: '城市名不能超过20个字', icon: 'none' })
+      wx.showToast({ title: '小馆最多20字', icon: 'none' })
       return
     }
     if (signature.length > 50) {
-      wx.showToast({ title: '签名不能超过50个字', icon: 'none' })
+      wx.showToast({ title: '题词最多50字', icon: 'none' })
       return
     }
 
     function doSave(avatar) {
       var r = savePlayer({ nickname: nickname, gender: gender, city: city, signature: signature, avatar: avatar })
       if (r.ok) {
-        wx.showToast({ title: '保存成功', icon: 'success' })
+        wx.showToast({ title: '印记已更新', icon: 'success' })
         self.setData({ player: r.data, showEditor: false })
       } else {
-        wx.showToast({ title: '保存失败', icon: 'none' })
+        wx.showToast({ title: '盖印没成功', icon: 'none' })
       }
     }
 
     if (avatarPath && (avatarPath.indexOf('http://tmp/') === 0 || avatarPath.indexOf('wxfile://tmp') === 0 || avatarPath.indexOf('tmp') > -1)) {
-      wx.showLoading({ title: '保存头像...' })
+      wx.showLoading({ title: '头像入册...' })
       saveAvatar(avatarPath).then(function (p) { wx.hideLoading(); doSave(p) }).catch(function () { wx.hideLoading(); doSave(self.data.player.avatar || '') })
     } else {
       doSave(avatarPath)
@@ -156,13 +156,14 @@ Page({
   onClearHistory: function () {
     var self = this
     wx.showModal({
-      title: '确认清除', content: '将清除所有游戏记录，此操作不可撤销', confirmText: '确认清除', confirmColor: '#EF4444',
+      title: '清空印记册？', content: '会抹去所有破题记录，清空后不可恢复。', confirmText: '清空', confirmColor: '#EF4444',
       success: function (res) {
-        if (res.confirm) { try { wx.removeStorageSync('idiom_wordle_history'); wx.showToast({ title: '已清除', icon: 'success' }); self.loadData() } catch (e) { wx.showToast({ title: '清除失败', icon: 'none' }) } }
+        if (res.confirm) { try { wx.removeStorageSync('idiom_wordle_history'); wx.showToast({ title: '印记册已清空', icon: 'success' }); self.loadData() } catch (e) { wx.showToast({ title: '清空没成功', icon: 'none' }) } }
       },
     })
   },
 
   onGoHome: function () { wx.reLaunch({ url: '/pages/home/home' }) },
   onGoRank: function () { wx.reLaunch({ url: '/pages/history/history' }) },
+  onGoRoom: function () { wx.navigateTo({ url: '/pages/room-lobby/room-lobby' }) },
 })

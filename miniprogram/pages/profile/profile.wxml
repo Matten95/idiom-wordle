@@ -1,6 +1,15 @@
 <scroll-view class="page-scroll" scroll-y="true" enhanced="true" show-scrollbar="{{false}}">
 <view class="page">
 
+  <view class="profile-hero">
+    <view class="profile-hero-copy">
+      <text class="profile-kicker">我的印记册</text>
+      <text class="profile-title">成语侠客档案</text>
+      <text class="profile-subtitle">今日破题和连胜都会留在这里</text>
+    </view>
+    <view class="profile-seal"><text>册</text></view>
+  </view>
+
   <!-- ========== 玩家信息卡片 ========== -->
   <view class="player-card">
     <view class="player-avatar-wrap">
@@ -32,9 +41,20 @@
     <view class="wr-item"><text class="wr-num">{{avgAttempts}}</text><text class="wr-label">平均猜次</text></view>
   </view>
 
-  <!-- 猜词分布 -->
+  <view class="profile-action-card">
+    <view class="profile-action-copy">
+      <text class="profile-action-title">今日还想再破一题？</text>
+      <text class="profile-action-sub">单人练手或拉好友开局，印记册继续加盖。</text>
+    </view>
+    <view class="profile-action-row">
+      <view class="profile-action-btn primary" bindtap="onGoHome">今日挑战</view>
+      <view class="profile-action-btn secondary" bindtap="onGoRoom">好友开局</view>
+    </view>
+  </view>
+
+  <!-- 破题手感 -->
   <view class="section">
-    <view class="section-title">猜词分布</view>
+    <view class="section-title">破题手感</view>
     <view class="dist-chart">
       <view class="dist-bar-row" wx:for="{{distBars}}" wx:key="index">
         <text class="dist-label">{{index + 1}}次</text>
@@ -50,7 +70,7 @@
 
   <!-- 近期记录 -->
   <view class="section" wx:if="{{recentGames.length > 0}}">
-    <view class="section-title">近期谜底</view>
+    <view class="section-title">最近破题</view>
     <view class="recent-list">
       <view class="recent-item" wx:for="{{recentGames}}" wx:key="date">
         <view class="recent-left"><text class="recent-date">{{item.dateDisplay}}</text><text class="recent-answer">{{item.answerText}}</text></view>
@@ -61,12 +81,12 @@
 
   <!-- 设置区域 -->
   <view class="section settings-section">
-    <view class="section-title">设置</view>
+    <view class="section-title">小馆设置</view>
     <view class="setting-item" bindtap="onClearHistory" wx:if="{{totalPlayed > 0}}">
-      <text class="setting-text">清除游戏记录</text><text class="setting-arrow">›</text>
+      <text class="setting-text">清空印记册</text><text class="setting-arrow">›</text>
     </view>
     <view class="setting-item">
-      <text class="setting-text">关于 Wordle 成语版</text><text class="setting-version">v1.0.0</text>
+      <text class="setting-text">关于成语挑战大厅</text><text class="setting-version">v1.0.0</text>
     </view>
   </view>
 
@@ -78,23 +98,24 @@
 <!-- 编辑弹窗 -->
 <view class="editor-overlay {{showEditor ? 'show' : ''}}" bindtap="onHideEditor">
   <view class="editor-card" catchtap="onStopProp">
-    <view class="editor-title">编辑个人信息</view>
+    <view class="editor-title">修订侠客印记</view>
+    <view class="editor-subtitle">昵称、头像和签名都会盖进你的印记册。</view>
 
     <!-- 头像更换 -->
     <view class="editor-field">
-      <text class="editor-label">头像</text>
+      <text class="editor-label">头像印章</text>
       <view class="avatar-picker" bindtap="onChooseAvatar">
         <image wx:if="{{editAvatar}}" class="avatar-pick-img" src="{{editAvatar}}" mode="aspectFill" />
         <text wx:else class="avatar-pick-placeholder">人</text>
-        <view class="avatar-pick-overlay"><text>更换</text></view>
+        <view class="avatar-pick-overlay"><text>换章</text></view>
       </view>
     </view>
 
     <!-- 昵称 — 非受控，无 maxlength 避免 IME 中断 -->
     <view class="editor-field">
-      <text class="editor-label">昵称</text>
+      <text class="editor-label">江湖名号</text>
       <input class="editor-input"
-        placeholder="给自己起个响亮的昵称"
+        placeholder="给自己起个响亮的名号"
         placeholder-style="color:#59647a;"
         value="{{editNickname}}"
         hold-keyboard="{{true}}"
@@ -104,7 +125,7 @@
 
     <!-- 性别 -->
     <view class="editor-field">
-      <text class="editor-label">性别</text>
+      <text class="editor-label">档案标记</text>
       <view class="gender-group">
         <view class="gender-option {{editGender === 'male' ? 'selected' : ''}}" bindtap="onSelectGender" data-gender="male"><text>男</text></view>
         <view class="gender-option {{editGender === 'female' ? 'selected' : ''}}" bindtap="onSelectGender" data-gender="female"><text>女</text></view>
@@ -114,9 +135,9 @@
 
     <!-- 城市 -->
     <view class="editor-field">
-      <text class="editor-label">城市</text>
+      <text class="editor-label">常驻小馆</text>
       <input class="editor-input"
-        placeholder="你的城市"
+        placeholder="留下你的城市"
         placeholder-style="color:#59647a;"
         value="{{editCity}}"
         hold-keyboard="{{true}}"
@@ -126,9 +147,9 @@
 
     <!-- 个性签名 -->
     <view class="editor-field">
-      <text class="editor-label">个性签名</text>
+      <text class="editor-label">印记题词</text>
       <textarea class="editor-textarea"
-        placeholder="写一句个性签名..."
+        placeholder="写一句破题宣言..."
         placeholder-style="color:#59647a;"
         value="{{editSignature}}"
         auto-height
@@ -138,8 +159,8 @@
     </view>
 
     <view class="editor-actions">
-      <button class="btn-cancel" bindtap="onHideEditor">取消</button>
-      <button class="btn-save" bindtap="onSavePlayer">保存</button>
+      <button class="btn-cancel" bindtap="onHideEditor">先不改</button>
+      <button class="btn-save" bindtap="onSavePlayer">盖上印记</button>
     </view>
   </view>
 </view>
@@ -147,6 +168,6 @@
 <!-- 底部导航 -->
 <view class="tab-bar">
   <view class="tab-item" bindtap="onGoHome"><text class="tab-icon">首</text><text class="tab-text">首页</text></view>
-  <view class="tab-item" bindtap="onGoRank"><text class="tab-icon">榜</text><text class="tab-text">排行</text></view>
+  <view class="tab-item" bindtap="onGoRank"><text class="tab-icon">印</text><text class="tab-text">印记</text></view>
   <view class="tab-item active"><text class="tab-icon">我</text><text class="tab-text">我的</text></view>
 </view>

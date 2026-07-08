@@ -14,10 +14,52 @@ function splitIdiomChars(text) {
 
 function buildFinalResults(room) {
   const gameState = room.gameState || {}
+  const totalRounds = gameState.totalRounds || 1
+  const maxScore = Math.max(1, totalRounds * 100)
+  const players = (room.players || []).map(player => ({
+    ...player,
+    scorePercent: Math.round(((player.score || 0) / maxScore) * 100),
+  })).sort((a, b) => (b.score || 0) - (a.score || 0))
+  const topScore = players.length > 0 ? players[0].score || 0 : 0
+  const tiedTopCount = players.filter(player => (player.score || 0) === topScore).length
   return {
-    players: room.players || [],
-    rounds: gameState.roundResults || [],
+    players: players.map(player => ({
+      ...player,
+      isWinner: topScore > 0 && (player.score || 0) === topScore,
+      rankText: topScore > 0 && (player.score || 0) === topScore ? (tiedTopCount > 1 ? '平' : '胜') : '',
+    })),
+    rounds: (gameState.roundResults || []).map(round => ({
+      ...round,
+      statusText: round.guessedCorrectly ? '+' + round.roundScore + '/100' : '未猜中',
+    })),
   }
+}
+
+function buildHinterGuide(hintsLength) {
+  if (hintsLength <= 0) return '先递一枚 2 字线索，别含答案字。好友卡住时还能继续补线索。'
+  if (hintsLength < MAX_HINTS) return '好友还没破题，可以再补 ' + (MAX_HINTS - hintsLength) + ' 条线索；提示越少，得分越高。'
+  return '五枚线索已出齐，等好友收桌破题。'
+}
+
+function buildGuesserGuide(hintsLength) {
+  if (hintsLength <= 0) return '等好友递第一枚线索，收到后就能开猜。'
+  return '已收到 ' + hintsLength + '/' + MAX_HINTS + ' 枚线索，少看少错更容易冲高分。'
+}
+
+function buildRoundEndHint(result) {
+  if (!result) return '本局已结算，准备下一桌。'
+  if (result.guessedCorrectly) return '猜词者破题成功，提示者也获得协作分。'
+  return '本局已揭晓，先复盘线索，再进下一局。'
+}
+
+function getFriendlyGameError(rawMsg) {
+  const msg = rawMsg || ''
+  if (msg.indexOf('云开发未就绪') > -1) return '好友桌暂时连不上云端，请回首页稍后再开。'
+  if (msg.indexOf('FUNCTION_NOT_FOUND') > -1 || msg.indexOf('-501000') > -1) return '好友局云函数还没部署，请先上传双人局云函数。'
+  if (msg.indexOf('房间不存在') > -1 || msg.indexOf('过期') > -1) return '这桌开局令已经失效，回大厅重新开一桌。'
+  if (msg.indexOf('游戏未在进行中') > -1) return '这桌已经收起或还没开局，回大厅重新确认。'
+  if (msg.indexOf('网络') > -1) return '好友桌连线有点慢，检查网络后再试。'
+  return '好友桌暂时没连上，稍后再试。'
 }
 
 Page({
@@ -30,7 +72,7 @@ Page({
 
     // 游戏状态
     currentRound: 0,
-    totalRounds: 5,
+    totalRounds: 6,
     idiomText: '',        // 仅提示者可见
     idiomChars: [],
     idiomMasked: '',      // 猜词者看到的结构提示 (如 "????")
@@ -40,6 +82,7 @@ Page({
     hintSlots: [0, 1, 2, 3, 4],
     hintInput: '',
     hintSubmitted: false,
+    hinterGuideText: buildHinterGuide(0),
 
     // 猜词
     inputText: '',
@@ -47,6 +90,8 @@ Page({
     inputSlots: [0, 1, 2, 3],
     inputFocused: false,
     canSubmit: false,
+    guesserGuideText: buildGuesserGuide(0),
+    surrenderLoading: false,
 
     // 计时
     roundSeconds: 0,
@@ -61,6 +106,9 @@ Page({
     showResult: false,
     roundResult: null,
     finalResults: null,
+    syncStatusText: '正在摆好好友对局桌...',
+    roundEndHintText: '',
+    advancingRound: false,
 
     // 输入验证
     hintError: '',
@@ -71,12 +119,18 @@ Page({
   _hintWatcher: null,
   _roundTimer: null,
   _playerOpenid: '',
+  _advancing: false,
 
   onLoad(options) {
     const roomCode = options.roomCode || ''
     if (!roomCode) {
       wx.showToast({ title: '房间码缺失', icon: 'none' })
       setTimeout(() => wx.reLaunch({ url: '/pages/home/home' }), 1000)
+      return
+    }
+    if (!isCloudReady()) {
+      this.setData({ status: 'loading', syncStatusText: getFriendlyGameError('云开发未就绪') })
+      setTimeout(() => wx.reLaunch({ url: '/pages/home/home' }), 1200)
       return
     }
 
@@ -86,7 +140,7 @@ Page({
       data: { roomCode }
     }).then(res => {
       if (!res.result || !res.result.ok) {
-        wx.showToast({ title: '房间不存在', icon: 'none' })
+        wx.showToast({ title: getFriendlyGameError(res.result && res.result.error || '房间不存在'), icon: 'none' })
         setTimeout(() => wx.reLaunch({ url: '/pages/home/home' }), 1000)
         return
       }
@@ -109,13 +163,16 @@ Page({
         myScore: me.score || 0,
         opponentScore: opponent.score || 0,
         status: 'playing',
+        syncStatusText: '好友局已同步，开猜吧。',
+        hinterGuideText: buildHinterGuide(0),
+        guesserGuideText: buildGuesserGuide(0),
       })
 
       this._startSync()
       this._startTimer()
     }).catch(e => {
       console.error('load game error:', e)
-      wx.showToast({ title: '加载失败', icon: 'none' })
+      wx.showToast({ title: getFriendlyGameError(e.errMsg || e.message || '网络错误'), icon: 'none' })
       setTimeout(() => wx.reLaunch({ url: '/pages/home/home' }), 1000)
     })
   },
@@ -136,16 +193,23 @@ Page({
       },
       onError: (err) => {
         console.warn('Room sync error in game:', err)
+        this.setData({ syncStatusText: getFriendlyGameError(err && (err.errMsg || err.message) || '网络错误') + ' 正在重新连线。' })
       }
     })
 
     // 监听提示词（猜词者用）
     this._hintWatcher = watchHints(roomCode, this.data.currentRound, {
       onUpdate: (hints) => {
-        this.setData({ hints })
+        this.setData({
+          hints,
+          hinterGuideText: buildHinterGuide(hints.length),
+          guesserGuideText: buildGuesserGuide(hints.length),
+          syncStatusText: hints.length > 0 ? '线索已同步，继续破题。' : this.data.syncStatusText,
+        })
       },
       onError: (err) => {
         console.warn('Hints sync error in game:', err)
+        this.setData({ syncStatusText: '线索同步有点慢，别急，正在补上。' })
       }
     })
   },
@@ -178,6 +242,7 @@ Page({
         finalResults: buildFinalResults(room),
         myScore: me.score || 0,
         opponentScore: opponent.score || 0,
+        syncStatusText: '这桌已收桌，可以分享战绩或再开一桌。',
       })
       return
     }
@@ -207,13 +272,26 @@ Page({
         status: 'playing',
         showResult: false,
         roundSeconds: 0,
+        syncStatusText: '新一局已开桌。',
+        hinterGuideText: buildHinterGuide(0),
+        guesserGuideText: buildGuesserGuide(0),
+        surrenderLoading: false,
       })
       this._startTimer()
       // 重新监听新回合的 hints
       if (this._hintWatcher) { this._hintWatcher.close() }
       this._hintWatcher = watchHints(this.data.roomCode, room.gameState.currentRound, {
-        onUpdate: (hints) => { this.setData({ hints }) },
-        onError: (err) => { console.warn('Hints sync error:', err) }
+        onUpdate: (hints) => {
+          this.setData({
+            hints,
+            hinterGuideText: buildHinterGuide(hints.length),
+            guesserGuideText: buildGuesserGuide(hints.length),
+          })
+        },
+        onError: (err) => {
+          console.warn('Hints sync error:', err)
+          this.setData({ syncStatusText: '线索同步有点慢，正在重连。' })
+        }
       })
     } else {
       // 同回合内更新：检查是否有猜中结果
@@ -224,6 +302,7 @@ Page({
           status: 'round_end',
           showResult: true,
           roundResult: lastResult,
+          roundEndHintText: buildRoundEndHint(lastResult),
           myScore: me.score,
           opponentScore: opponent.score,
         })
@@ -276,12 +355,12 @@ Page({
         this.setData({ hintInput: '', hintError: '', hintSubmitted: true })
         setTimeout(() => this.setData({ hintSubmitted: false }), 1500)
       } else {
-        this.setData({ hintError: res.result.reason || res.result.error || '提交失败' })
+        this.setData({ hintError: res.result.reason || res.result.error || '这枚线索递不出去，换一个试试' })
       }
       wx.vibrateShort({ type: 'light' })
     } catch (e) {
       console.error('submitHint error:', e)
-      this.setData({ hintError: '网络错误，请重试' })
+      this.setData({ hintError: '线索没送到好友桌上，检查网络再递一次' })
     }
   },
 
@@ -339,18 +418,49 @@ Page({
           setTimeout(() => this.setData({ guessError: '' }), 2000)
         }
       } else {
-        this.setData({ guessError: res.result.error || '提交失败' })
+        this.setData({ guessError: res.result.error || '这次没送上桌，再点一次' })
       }
     } catch (e) {
       console.error('submitGuess error:', e)
-      this.setData({ guessError: '网络错误，请重试' })
+      this.setData({ guessError: '答案没送到好友桌上，检查网络再猜一次' })
+    }
+  },
+
+  async onGiveUpRound() {
+    if (this.data.myRole !== 'guesser' || this.data.status !== 'playing' || this.data.surrenderLoading) return
+    this.setData({ surrenderLoading: true, guessError: '' })
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'manageRoom',
+        data: {
+          action: 'giveUp',
+          roomCode: this.data.roomCode,
+        }
+      })
+      if (res.result && res.result.ok) {
+        this._stopTimer()
+        this.setData({
+          status: 'round_end',
+          showResult: true,
+          roundResult: res.result.roundResult,
+          roundEndHintText: buildRoundEndHint(res.result.roundResult),
+          surrenderLoading: false,
+        })
+      } else {
+        this.setData({ surrenderLoading: false, guessError: res.result.error || '暂时揭不开答案，再试一次' })
+      }
+    } catch (e) {
+      console.error('giveUpRound error:', e)
+      this.setData({ surrenderLoading: false, guessError: '答案揭晓失败，检查网络再试' })
     }
   },
 
   /** ========== 回合推进 ========== */
   async onNextRound() {
+    if (this._advancing || this.data.advancingRound) return
+    this._advancing = true
     const data = this.data
-    this.setData({ showResult: false, roundResult: null, status: 'loading' })
+    this.setData({ showResult: false, status: 'loading', advancingRound: true, syncStatusText: '正在收桌，准备下一局...' })
 
     try {
       const res = await wx.cloud.callFunction({
@@ -391,26 +501,55 @@ Page({
             status: 'playing',
             myScore: me.score,
             opponentScore: opponent.score,
+            advancingRound: false,
+            syncStatusText: '新一局已开桌。',
+            hinterGuideText: buildHinterGuide(0),
+            guesserGuideText: buildGuesserGuide(0),
+            surrenderLoading: false,
           })
           this._startTimer()
           // 更新 hints 监听
           if (this._hintWatcher) { this._hintWatcher.close() }
           this._hintWatcher = watchHints(data.roomCode, room.gameState.currentRound, {
-            onUpdate: (hints) => { this.setData({ hints }) },
-            onError: (err) => { console.warn('Hints sync error:', err) }
+            onUpdate: (hints) => {
+              this.setData({
+                hints,
+                hinterGuideText: buildHinterGuide(hints.length),
+                guesserGuideText: buildGuesserGuide(hints.length),
+              })
+            },
+            onError: (err) => {
+              console.warn('Hints sync error:', err)
+              this.setData({ syncStatusText: '线索同步有点慢，正在重连。' })
+            }
           })
         }
+      } else {
+        this.setData({
+          status: 'round_end',
+          showResult: true,
+          advancingRound: false,
+          syncStatusText: res.result && res.result.error ? res.result.error : '下一局暂时开不了，再点一次。',
+        })
       }
     } catch (e) {
       console.error('advanceRound error:', e)
+      this.setData({
+        status: 'round_end',
+        showResult: true,
+        advancingRound: false,
+        syncStatusText: '收桌失败，检查网络后再点下一局。',
+      })
+    } finally {
+      this._advancing = false
     }
   },
 
   /** 退出游戏 */
   onQuit() {
     wx.showModal({
-      title: '退出游戏',
-      content: '确定退出当前游戏吗？',
+      title: '收起这桌？',
+      content: '退出会结束当前好友局，好友也会看到本桌已收起。',
       success: (res) => {
         if (res.confirm) {
           wx.cloud.callFunction({
@@ -430,9 +569,19 @@ Page({
 
   onShareGame() {
     const d = this.data
+    if (d.status === 'finished') {
+      const resultText = d.myScore >= d.opponentScore ? '我赢了这桌' : '我差点翻盘'
+      return {
+        title: '成语好友局 · ' + resultText + ' ' + d.myScore + ':' + d.opponentScore + '\n来复仇开一桌',
+        path: '/pages/room-lobby/room-lobby',
+      }
+    }
+    const path = d.roomCode
+      ? '/pages/room-lobby/room-lobby?code=' + encodeURIComponent(d.roomCode)
+      : '/pages/room-lobby/room-lobby'
     return {
-      title: '双人提示猜词\n' + d.myScore + ' vs ' + d.opponentScore + '\n来挑战我吧',
-      path: '/pages/room-lobby/room-lobby',
+      title: '成语好友局 · 我在桌上等你\n比分 ' + d.myScore + ':' + d.opponentScore,
+      path,
     }
   },
 

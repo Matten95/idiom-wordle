@@ -103,27 +103,38 @@ function getRandomIdiom(level) {
   return JSON.parse(JSON.stringify(pool[idx]))
 }
 
-/** 部首提示位选择 */
-function getHintPositions(dateStr, radicalPositions) {
+const WEAK_RADICALS = new Set(['一', '丨', '丶', '丿', '乙', '亅', '亠', '冂', '冖', '凵', '彡'])
+
+/** 部首提示位选择：优先明确结构位和高信息部首，避免固定暴露首字与重复部首 */
+function getHintPositions(dateStr, radicalPositions, radicals) {
   const date = dateStr || getTodayString()
   const seed = hashDate(date + '_hint')
-  const result = []
-  if (radicalPositions && radicalPositions[0] && radicalPositions[0] !== 'center') {
-    result.push(0)
-  }
+  const start = seed % 4
   const candidates = []
-  for (let i = 1; i <= 3; i++) {
+  for (let i = 0; i <= 3; i++) {
     const pos = radicalPositions ? radicalPositions[i] : 'center'
-    if (pos && pos !== 'center') candidates.push(i)
+    const radical = radicals ? radicals[i] : ''
+    const positionScore = pos && pos !== 'center' ? 2 : 0
+    const radicalScore = radical ? (WEAK_RADICALS.has(radical) ? 0 : 3) : 1
+    const seededRank = (i - start + 4) % 4
+    candidates.push({ index: i, radical, score: positionScore + radicalScore, seededRank })
   }
-  if (candidates.length === 0) {
-    for (let i = 1; i <= 3; i++) candidates.push(i)
-  }
-  const pick = candidates[seed % candidates.length]
-  if (!result.includes(pick)) result.push(pick)
-  if (result.length < 2) {
-    const fallbackCandidates = [0, 1, 2, 3].filter((index) => !result.includes(index))
-    const fallback = fallbackCandidates[(seed + 1) % fallbackCandidates.length]
+  const pool = candidates.sort((a, b) => (b.score - a.score) || (a.seededRank - b.seededRank))
+  const result = []
+  const usedRadicals = new Set()
+  pool.forEach((item) => {
+    if (result.length >= 3) return
+    if (item.radical && usedRadicals.has(item.radical)) return
+    result.push(item.index)
+    if (item.radical) usedRadicals.add(item.radical)
+  })
+  pool.forEach((item) => {
+    if (result.length >= 3) return
+    if (!result.includes(item.index)) result.push(item.index)
+  })
+  while (result.length < 3) {
+    const fallback = [0, 1, 2, 3].find((index) => !result.includes(index))
+    if (fallback === undefined) break
     result.push(fallback)
   }
   return result

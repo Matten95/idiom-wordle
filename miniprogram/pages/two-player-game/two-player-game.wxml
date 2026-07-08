@@ -20,48 +20,54 @@
   </view>
 
   <view class="loading-card" wx:if="{{status === 'loading'}}">
-    <text>正在同步房间...</text>
+    <text>{{syncStatusText}}</text>
   </view>
 
   <!-- ===== 提示者视图 ===== -->
   <view class="game-area" wx:if="{{myRole === 'hinter' && status === 'playing'}}">
     <view class="role-badge hinter">你是提示者</view>
+    <view class="role-guide">
+      <text>{{hinterGuideText}}</text>
+    </view>
 
     <view class="idiom-display">
-      <view class="idiom-label">当前成语</view>
+      <view class="idiom-label">好友要猜的成语</view>
       <view class="idiom-chars">
         <text class="idiom-char" wx:for="{{idiomChars}}" wx:key="index">{{item}}</text>
       </view>
     </view>
 
     <view class="hint-input-area">
-      <view class="input-label">输入提示词（2个汉字，不能含成语中的字）</view>
+      <view class="input-label">递一枚 2 字线索，不能含答案字</view>
       <view class="hint-input-row">
         <input class="hint-input" type="text" placeholder="如：武器" placeholder-style="color:#59647a"
           value="{{hintInput}}" bindinput="onHintInput" maxlength="2" />
-        <button class="btn-hint-submit" bindtap="onSubmitHint">提交提示</button>
+        <button class="btn-hint-submit" bindtap="onSubmitHint">递出线索</button>
       </view>
       <view class="hint-error" wx:if="{{hintError}}">{{hintError}}</view>
       <view class="hint-ok" wx:if="{{hintSubmitted}}">提示已发送</view>
     </view>
 
     <view class="submitted-hints">
-      <view class="section-title">已提交提示（{{hints.length}}/5）：</view>
+      <view class="section-title">已递线索（{{hints.length}}/5）</view>
       <view class="hint-tags">
         <view class="hint-tag" wx:for="{{hints}}" wx:key="index">{{index + 1}}. {{item.word}}</view>
-        <view class="hint-tag empty" wx:if="{{hints.length === 0}}">等待提交...</view>
+        <view class="hint-tag empty" wx:if="{{hints.length === 0}}">先递第一枚线索</view>
       </view>
     </view>
 
-    <view class="waiting-hint">等待猜词者回答中...</view>
+    <view class="waiting-hint">好友破题中；如果他卡住，可以再补一枚线索。</view>
   </view>
 
   <!-- ===== 猜词者视图 ===== -->
   <view class="game-area" wx:if="{{myRole === 'guesser' && status === 'playing'}}">
     <view class="role-badge guesser">你是猜词者</view>
+    <view class="role-guide">
+      <text>{{guesserGuideText}}</text>
+    </view>
 
     <view class="hints-received">
-      <view class="section-title">提示词</view>
+      <view class="section-title">好友递来的线索</view>
       <view class="hint-cards">
         <view class="hint-card {{index < hints.length ? 'visible' : 'hidden'}}" wx:for="{{hintSlots}}" wx:key="*this">
           <text wx:if="{{index < hints.length}}">{{hints[index].word}}</text>
@@ -84,18 +90,28 @@
         <button class="btn btn-clear" bindtap="onClearInput">清空</button>
         <button class="btn btn-submit {{canSubmit ? '' : 'disabled'}}" bindtap="onSubmitGuess" disabled="{{!canSubmit}}">猜！</button>
       </view>
+      <button class="btn-give-up" bindtap="onGiveUpRound" disabled="{{surrenderLoading}}">
+        {{surrenderLoading ? '正在揭晓...' : '揭晓本局'}}
+      </button>
     </view>
   </view>
 
   <!-- ===== 回合结果 ===== -->
-  <view class="round-result-overlay" wx:if="{{showResult && status === 'round_end'}}" catchtap="onNextRound">
+  <view class="round-result-overlay" wx:if="{{showResult && status === 'round_end'}}">
     <view class="round-result-card">
       <view class="result-title">第{{currentRound}}局结束</view>
       <view class="result-idiom">答案：{{roundResult.idiom || '???'}}</view>
       <view class="result-detail" wx:if="{{roundResult.guessedCorrectly}}">
-        <text>提示数：{{roundResult.hintsUsed}} · 用时：{{roundResult.timeTaken}}秒 · 得分：{{roundResult.roundScore}}</text>
+        <text>线索：{{roundResult.hintsUsed}} · 用时：{{roundResult.timeTaken}}秒 · 猜词得分：{{roundResult.roundScore}}</text>
       </view>
-      <button class="btn-next" bindtap="onNextRound">下一局</button>
+      <view class="result-detail" wx:else>
+        <text>本局已揭晓 · 线索：{{roundResult.hintsUsed}} · 误猜：{{roundResult.wrongGuessCount}}</text>
+      </view>
+      <view class="round-end-hint" wx:if="{{roundEndHintText}}">{{roundEndHintText}}</view>
+      <button class="btn-next" bindtap="onNextRound" disabled="{{advancingRound}}">
+        {{advancingRound ? '正在开下一局...' : '下一局'}}
+      </button>
+      <view class="sync-note" wx:if="{{syncStatusText}}">{{syncStatusText}}</view>
     </view>
   </view>
 
@@ -107,8 +123,8 @@
       <view class="final-scores">
         <view class="final-player" wx:for="{{finalResults.players}}" wx:key="openid">
           <view class="final-name">{{item.playerName}}{{item.playerName === playerName ? '（你）' : ''}}</view>
-          <view class="final-score">{{item.score}} 分</view>
-          <view class="final-crown" wx:if="{{index === 0}}">胜</view>
+          <view class="final-score">{{item.scorePercent}} 分 / 100</view>
+          <view class="final-crown" wx:if="{{item.isWinner}}">{{item.rankText}}</view>
         </view>
       </view>
 
@@ -116,12 +132,12 @@
         <view class="section-title">回合记录</view>
         <view class="round-record" wx:for="{{finalResults.rounds}}" wx:key="round">
           <text class="round-num">第{{item.round}}局</text>
-          <text class="round-status">{{item.guessedCorrectly ? '+' + item.roundScore : '未猜中'}}</text>
+          <text class="round-status">{{item.statusText}}</text>
           <text class="round-idiom">{{item.idiom}}</text>
         </view>
       </view>
 
-      <button class="btn-again" bindtap="onPlayAgain">返回首页</button>
+      <button class="btn-again" bindtap="onPlayAgain">再开一桌</button>
       <button class="btn-share" open-type="share">分享战绩</button>
     </view>
   </view>

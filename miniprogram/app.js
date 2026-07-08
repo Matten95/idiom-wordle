@@ -1,4 +1,7 @@
 // 成语猜猜猜 - 小程序入口
+const { getToday, getYesterday } = require('./utils/daily')
+const { logEvent, reportError } = require('./utils/telemetry')
+
 App({
   globalData: {
     // 今日谜题数据
@@ -22,14 +25,24 @@ App({
     this.globalData.lastPlayDate = lastDate
 
     // 检查是否跨天
-    const today = this.getToday()
+    const today = getToday()
     if (lastDate && lastDate !== today) {
-      const yesterday = this.getYesterday()
+      const yesterday = getYesterday(today)
       if (lastDate !== yesterday) {
         this.globalData.streakDays = 0
         wx.setStorageSync('streakDays', 0)
       }
     }
+
+    logEvent('app_launch', { date: today })
+  },
+
+  onError(error) {
+    reportError('onError', error)
+  },
+
+  onUnhandledRejection(res) {
+    reportError('onUnhandledRejection', res && (res.reason || res))
   },
 
   initCloud() {
@@ -50,13 +63,6 @@ App({
     }
   },
 
-  getToday() {
-    const d = new Date()
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-  },
-
-  getYesterday() {
-    const d = new Date(Date.now() - 86400000)
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-  },
+  getToday,
+  getYesterday,
 })

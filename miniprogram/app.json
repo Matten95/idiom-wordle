@@ -9,10 +9,10 @@
     "pages/profile/profile"
   ],
   "window": {
-    "navigationBarBackgroundColor": "#F1F5FF",
+    "navigationBarBackgroundColor": "#EAF4FF",
     "navigationBarTitleText": "成语日课",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#F1F5FF",
+    "backgroundColor": "#EAF4FF",
     "backgroundTextStyle": "dark"
   },
   "cloud": true,
