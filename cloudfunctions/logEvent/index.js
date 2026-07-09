@@ -15,6 +15,12 @@ const ALLOWED_EVENTS = new Set([
   'watch_ad_done',
   'share_tap',
   'share_open',
+  'share_image_ready',
+  'subscribe_daily',
+  'claim_streak_shield',
+  'use_streak_shield',
+  'repair_streak',
+  'daily_compare_loaded',
   'create_room',
   'join_room',
 ])

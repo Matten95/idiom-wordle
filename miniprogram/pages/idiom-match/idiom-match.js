@@ -4,14 +4,16 @@
  */
 const idiomHints = require('../../data/idiom-hints')
 const idiomsData = require('../../data/idioms')
+const config = require('../../config')
 const { logEvent } = require('../../utils/telemetry')
+const { drawHintMatchShareCard } = require('../../utils/share-card')
 
 const MATCH_PLAYED_KEY = 'idiom_match_played_count'
 const DEFAULT_MAX_DIFFICULTY = idiomHints.__meta.defaultMaxDifficulty || 2
 const HINT_TIMER_SECONDS = 10
 const EARLY_REVEAL_PENALTY = 5
 const WRONG_GUESS_PENALTY = 4
-const STORY_HINT_AD_UNIT_ID = 'adunit-xxxxxxxxxxxxxxxx'
+const STORY_HINT_AD_UNIT_ID = config.rewardedVideoAds.storyHint
 const DIFFICULTY_SCORE_ADJUST = {
   1: -3,
   2: 0,
@@ -256,6 +258,7 @@ Page({
     wrongGuessCount: 0,
     earlyRevealCount: 0,
     hintChain: [],
+    shareImagePath: '',
   },
 
   _timer: null,
@@ -328,6 +331,7 @@ Page({
       wrongGuessCount: 0,
       earlyRevealCount: 0,
       hintChain: [],
+      shareImagePath: '',
     })
     this.startTimer()
   },
@@ -583,6 +587,7 @@ Page({
         word,
       })),
     })
+    this.prepareShareImage(won)
     if (won) wx.vibrateShort({ type: 'heavy' })
     logEvent(won ? 'win' : 'lose', {
       mode: 'idiom_match',
@@ -594,6 +599,22 @@ Page({
 
   onPlayAgain() { this.initGame() },
   onGoHome() { wx.reLaunch({ url: '/pages/home/home' }) },
+
+  prepareShareImage(won) {
+    const self = this
+    drawHintMatchShareCard(this, {
+      idiomText: this.data.idiomText,
+      score: this.data.score,
+      won,
+      hintsUsed: this.data.hintsUsed,
+      hintChain: this.data.hintChain,
+      resultText: won ? this.data.resultBurstText : '差一点破题',
+    }).then(function (path) {
+      if (!path) return
+      self.setData({ shareImagePath: path })
+      logEvent('share_image_ready', { page: 'idiom_match', idiom: self.data.idiomText })
+    })
+  },
 
   onShare() {
     logEvent('share_tap', { page: 'idiom_match', status: this.data.status, idiom: this.data.idiomText })
@@ -610,8 +631,17 @@ Page({
     return {
       title: '提示猜词 · ' + resultLine + '\n来同题挑战',
       path: sharePath,
+      imageUrl: this.data.shareImagePath || '',
     }
   },
 
   onShareAppMessage() { return this.onShare() },
+
+  onShareTimeline() {
+    return {
+      title: this.data.showResult ? '提示猜词 · ' + this.data.score + '分挑战' : '提示猜词 · 来挑战这一题',
+      query: 'idiom=' + encodeURIComponent(this.data.idiomText),
+      imageUrl: this.data.shareImagePath || '',
+    }
+  },
 })

@@ -1,6 +1,7 @@
 // 成语猜猜猜 - 小程序入口
 const { getToday, getYesterday } = require('./utils/daily')
 const { logEvent, reportError } = require('./utils/telemetry')
+const { markStreakRecoverable, tryUseStreakShield } = require('./utils/retention')
 
 App({
   globalData: {
@@ -29,8 +30,12 @@ App({
     if (lastDate && lastDate !== today) {
       const yesterday = getYesterday(today)
       if (lastDate !== yesterday) {
-        this.globalData.streakDays = 0
-        wx.setStorageSync('streakDays', 0)
+        const shield = tryUseStreakShield(today)
+        if (!shield.used) {
+          markStreakRecoverable(today, lastDate, streak)
+          this.globalData.streakDays = 0
+          wx.setStorageSync('streakDays', 0)
+        }
       }
     }
 

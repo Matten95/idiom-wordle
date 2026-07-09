@@ -1,8 +1,10 @@
 const { getDailyIdiom, getRandomIdiom, getToday, getYesterday, getHintPositions } = require('../../utils/daily')
 const { scoreGuess, parsePinyin, getPraise, loadHistory } = require('../../utils/engine')
 const { getPlayerName } = require('../../utils/player')
-const { submitGameResult } = require('../../utils/cloud')
+const { submitGameResult, fetchDailyStats } = require('../../utils/cloud')
 const { logEvent } = require('../../utils/telemetry')
+const { requestDailyReminder, claimShieldOrRepairWithAd, getRetentionState } = require('../../utils/retention')
+const { drawShareCard } = require('../../utils/share-card')
 const idiomsData = require('../../data/idioms')
 
 Page({
@@ -42,7 +44,23 @@ Page({
 
     // 分享
     shareText: '',
+    shareImagePath: '',
     streakDays: 0,
+    puzzleNumber: 0,
+    comparisonText: '',
+    comparisonBars: [],
+    reminderStatusText: '',
+    shieldStatusText: '',
+    shieldActionText: '看广告领护盾',
+    shieldTitleText: '连胜护盾',
+    shieldDescText: '看完小视频得 1 枚护盾，断签时自动消耗。',
+    shieldLoading: false,
+    showFirstGuide: false,
+    firstGuideSteps: [
+      { key: 'radical', title: '先看部首', text: '已揭开的部首和位置，是第一轮破题方向。' },
+      { key: 'color', title: '再看颜色', text: '绿是命中，蓝是同音，黄是错位，灰色尽量排除。' },
+      { key: 'common', title: '先猜常见', text: '答案来自大众题池，别一上来冲冷僻词。' },
+    ],
     // 练习模式
     practiceMode: false,
   },
@@ -60,6 +78,7 @@ Page({
     if (this._practiceMode) {
       this.setData({ practiceMode: true, hintTitle: '练习部首' })
     }
+    this.maybeShowFirstGuide()
     this.initGame()
   },
 
@@ -77,6 +96,7 @@ Page({
       this.setData({
         dateDisplay: this.fmtDate(today),
         date: today,
+        puzzleNumber: idiom.puzzleNumber,
         status: saved.status,
         attempts: saved.attempts,
         currentRow: saved.attempts.length,
@@ -88,11 +108,16 @@ Page({
         roundFeedback: saved.status === 'playing' && lastAttempt ? this.buildRoundFeedback(lastAttempt.result, saved.status) : '',
         resultReview: saved.status !== 'playing' ? this.buildResultReview(saved.attempts) : '',
       })
+      if (saved.status !== 'playing') {
+        this.loadDailyStats(saved.attempts, saved.status)
+        this.prepareShareImage(saved.attempts, saved.status)
+      }
     } else {
       // 新游戏
       this.setData({
         dateDisplay: this.fmtDate(today),
         date: today,
+        puzzleNumber: idiom.puzzleNumber,
         status: 'playing',
         attempts: [],
         currentRow: 0,
@@ -105,6 +130,10 @@ Page({
         showAnswer: false,
         roundFeedback: '',
         resultReview: '',
+        comparisonText: '',
+        comparisonBars: [],
+        shareImagePath: '',
+        reminderStatusText: '',
       })
     }
 
@@ -127,6 +156,7 @@ Page({
       hintRadicals,
       hintPositions,
     })
+    this.refreshRetentionPanel()
   },
 
   // ============ 输入处理（统一输入框，不打断中文输入法） ============
@@ -290,6 +320,8 @@ Page({
         date: this.data.date,
         attempts: attempts.length,
       })
+      this.loadDailyStats(attempts, newStatus)
+      this.prepareShareImage(attempts, newStatus)
     }
 
     // 震动反馈
@@ -328,6 +360,74 @@ Page({
     if (best.pinyin > 0) parts.push(`${best.pinyin} 个读音线索`)
     if (best.present > 0) parts.push(`${best.present} 个错位字`)
     return parts.length ? `复盘：${parts.join('，')}。` : '复盘：这题偏难，下一局从常见成语试起。'
+  },
+
+  loadDailyStats(attempts, status) {
+    if (this._practiceMode) return
+    const self = this
+    fetchDailyStats(this.data.date).then(function (res) {
+      const stats = res.stats || {}
+      const comparison = self.buildComparison(stats, attempts, status)
+      self.setData({
+        comparisonText: comparison.text,
+        comparisonBars: comparison.bars,
+      })
+      logEvent('daily_compare_loaded', { date: self.data.date, source: res.source || 'unknown', total: stats.total || 0 })
+    })
+  },
+
+  buildComparison(stats, attempts, status) {
+    const total = stats.total || 0
+    const dist = stats.attemptDist || [0, 0, 0, 0, 0, 0]
+    const maxCount = Math.max.apply(null, dist.concat([1]))
+    const bars = dist.map(function (count, index) {
+      return {
+        key: 'try-' + (index + 1),
+        label: (index + 1) + '猜',
+        count,
+        width: Math.max(8, Math.round(count * 100 / maxCount)),
+      }
+    })
+    if (!total) return { text: '你是今天第一批盖章的人。', bars }
+    if (status !== 'won') {
+      return { text: `今日已有 ${total} 人开局，通关率 ${stats.winRate || 0}%。`, bars }
+    }
+    const used = attempts.length
+    const worseWins = dist.slice(used).reduce(function (sum, count) { return sum + count }, 0)
+    const lost = stats.loseCount || 0
+    const beat = Math.min(99, Math.max(1, Math.round((worseWins + lost) * 100 / total)))
+    return { text: `你击败了约 ${beat}% 的今日玩家。`, bars }
+  },
+
+  prepareShareImage(attempts, status) {
+    const self = this
+    const scoreText = status === 'won' ? attempts.length + '/6' : 'X/6'
+    drawShareCard(this, {
+      attempts,
+      dateDisplay: this.data.dateDisplay,
+      puzzleNumber: this.data.puzzleNumber,
+      scoreText,
+      resultText: status === 'won' ? '今日已破题' : '今日差一点',
+    }).then(function (path) {
+      if (!path) return
+      self.setData({ shareImagePath: path })
+      logEvent('share_image_ready', { page: 'index', date: self.data.date })
+    })
+  },
+
+  refreshRetentionPanel(keepStatusText) {
+    const state = getRetentionState()
+    const recoverable = state.streakRecoverable
+    this.setData({
+      shieldActionText: recoverable ? '看广告补签' : '看广告领护盾',
+      shieldTitleText: recoverable ? '连胜补签' : '连胜护盾',
+      shieldDescText: recoverable
+        ? '昨天断签了，看完小视频可补回连胜。'
+        : '看完小视频得 1 枚护盾，断签时自动消耗。',
+      shieldStatusText: keepStatusText ? this.data.shieldStatusText : (recoverable
+        ? '可补回 ' + Math.max(1, state.recoverableStreak) + ' 天连胜'
+        : this.data.shieldStatusText),
+    })
   },
 
   // ============ 拼音查找 ============
@@ -405,12 +505,20 @@ Page({
     return {
       title: `${title}\n${grid}\n\n${this.data.praiseText}`,
       path: '/pages/index/index',
-      imageUrl: '', // 可生成分享图片
+      imageUrl: this.data.shareImagePath || '',
     }
   },
 
   onShareAppMessage() {
     return this.onShare()
+  },
+
+  onShareTimeline() {
+    return {
+      title: '成语日课 · 今日部首猜词',
+      query: '',
+      imageUrl: this.data.shareImagePath || '',
+    }
   },
 
   /** 分享给好友 */
@@ -420,6 +528,51 @@ Page({
       menus: ['shareAppMessage', 'shareTimeline'],
     })
   },
+
+  onRequestReminder() {
+    const self = this
+    requestDailyReminder().then(function (res) {
+      self.setData({ reminderStatusText: res.accepted || res.fallback ? '明日提醒已记下' : '提醒没开成，明天也欢迎手动来破题' })
+      wx.showToast({ title: res.accepted || res.fallback ? '明日提醒已记下' : '稍后再试', icon: 'none' })
+    })
+  },
+
+  onClaimShield() {
+    if (this.data.shieldLoading) return
+    const self = this
+    this.setData({ shieldLoading: true, shieldActionText: '广告准备中' })
+    claimShieldOrRepairWithAd('daily_result').then(function (result) {
+      const state = getRetentionState()
+      if (result.cancelled) {
+        self.setData({ shieldStatusText: '看完小视频才会发放奖励' })
+      } else if (result.repaired && result.ok) {
+        self.setData({ streakDays: result.streak, shieldStatusText: `补签成功，连胜回到 ${result.streak} 天` })
+        wx.showToast({ title: '补签成功', icon: 'none' })
+      } else {
+        self.setData({
+          shieldStatusText: result.ok ? `护盾 +1，当前 ${state.shieldCount} 枚` : `当前已有 ${state.shieldCount} 枚护盾`,
+        })
+        wx.showToast({ title: result.ok ? '护盾已入册' : '今天已领过', icon: 'none' })
+      }
+      self.setData({ shieldLoading: false })
+      self.refreshRetentionPanel(true)
+    })
+  },
+
+  maybeShowFirstGuide() {
+    if (this._practiceMode) return
+    try {
+      if (wx.getStorageSync('idiom_index_guide_seen')) return
+      wx.setStorageSync('idiom_index_guide_seen', true)
+      this.setData({ showFirstGuide: true })
+    } catch (e) {}
+  },
+
+  onCloseFirstGuide() {
+    this.setData({ showFirstGuide: false })
+  },
+
+  onStopGuideTap() {},
 
   // ============ 本地存档 ============
   SAVE_KEY: 'idiom_game_save',

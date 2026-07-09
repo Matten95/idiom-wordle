@@ -27,19 +27,43 @@ function getYesterday(dateStr) {
 }
 
 const EPOCH = '2026-01-01'
+const DAILY_SHUFFLE_SEED = 'idiom-daily-v2'
 
 function getDailyIdiom(dateStr) {
   const date = dateStr || getToday()
   // 所有人同一天同一道题，默认只从大众难度题池中选
   const pool = getDefaultPool()
-  const index = hashDate(date) % pool.length
-  const idiom = JSON.parse(JSON.stringify(pool[index]))
-
-  const d = new Date(date + 'T00:00:00+08:00')
-  const epoch = new Date(EPOCH + 'T00:00:00+08:00')
-  const puzzleNumber = Math.floor((d - epoch) / 86400000) + 1
+  const puzzleNumber = calculatePuzzleNumber(date)
+  const sequence = getDailySequence(pool)
+  const idiom = JSON.parse(JSON.stringify(sequence[(puzzleNumber - 1) % sequence.length]))
 
   return { ...idiom, date, puzzleNumber }
+}
+
+function calculatePuzzleNumber(date) {
+  const d = new Date(date + 'T00:00:00+08:00')
+  const epoch = new Date(EPOCH + 'T00:00:00+08:00')
+  return Math.floor((d - epoch) / 86400000) + 1
+}
+
+function seededRandom(seed) {
+  let value = hashDate(seed) || 1
+  return function () {
+    value = (value * 1664525 + 1013904223) % 4294967296
+    return value / 4294967296
+  }
+}
+
+function getDailySequence(pool) {
+  const result = pool.slice()
+  const random = seededRandom(DAILY_SHUFFLE_SEED + ':' + pool.length)
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1))
+    const temp = result[i]
+    result[i] = result[j]
+    result[j] = temp
+  }
+  return result
 }
 
 function getDefaultPool() {
@@ -95,4 +119,4 @@ function getRandomIdiom(level) {
   return JSON.parse(JSON.stringify(pool[idx]))
 }
 
-module.exports = { getDailyIdiom, getRandomIdiom, getToday, getYesterday, hashDate, getHintPositions }
+module.exports = { getDailyIdiom, getRandomIdiom, getToday, getYesterday, hashDate, getHintPositions, getDailySequence, calculatePuzzleNumber }

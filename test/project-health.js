@@ -37,6 +37,10 @@ test('派生成语词库与 data/idioms.json 同步', () => {
     cwd: root,
     stdio: 'pipe',
   })
+  childProcess.execFileSync('node', ['scripts/lint-idioms.js'], {
+    cwd: root,
+    stdio: 'pipe',
+  })
 })
 
 test('小程序每日选题和引擎可在 Node 侧冒烟运行', () => {
@@ -44,7 +48,7 @@ test('小程序每日选题和引擎可在 Node 侧冒烟运行', () => {
   const engine = require('../miniprogram/utils/engine')
   const idiom = daily.getDailyIdiom('2026-07-03')
   const result = engine.scoreGuess(idiom.chars, idiom.pinyin, idiom)
-  assert(idiom.text === '卧薪尝胆', '2026-07-03 每日成语应保持稳定')
+  assert(idiom.text === '心旷神怡', '2026-07-03 每日成语应保持稳定')
   assert(result.summary.isWin, '完全匹配的猜测应判定为胜利')
 })
 
@@ -121,6 +125,58 @@ test('第一阶段上线闸门具备最小安全与可观测性', () => {
   assert(submitResultJs.includes('validateResult') && submitResultJs.includes('答案与每日题不匹配') && submitResultJs.includes('不能提交未来日期'), 'submitResult 应校验日期、答案和未来日期')
   assert(submitResultJs.includes('normalizeAttempts') && submitResultJs.includes('old.attempts <= attemptCount') && !submitResultJs.includes('parseInt(attempts)'), 'submitResult 应严格规范化 attempts 后再入库和比较')
   assert(syncDataJs.includes('cloudfunctions/submitResult/idioms.json'), 'submitResult 的校验词库应纳入同步脚本')
+})
+
+test('第二阶段留存与传播基础能力已接入', () => {
+  const dailyJs = read('miniprogram/utils/daily.js')
+  const nodeDailyJs = read('src/daily.js')
+  const cloudDailyJs = read('cloudfunctions/getDailyIdiom/index.js')
+  const submitResultJs = read('cloudfunctions/submitResult/index.js')
+  const indexJs = read('miniprogram/pages/index/index.js')
+  const indexWxml = read('miniprogram/pages/index/index.wxml')
+  const indexWxss = read('miniprogram/pages/index/index.wxss')
+  const retentionJs = read('miniprogram/utils/retention.js')
+  const rewardedAdJs = read('miniprogram/utils/rewarded-ad.js')
+  const shareCardJs = read('miniprogram/utils/share-card.js')
+  const playerJs = read('miniprogram/utils/player.js')
+  const getRankingJs = read('cloudfunctions/getRanking/index.js')
+  const logEventJs = read('cloudfunctions/logEvent/index.js')
+  const subscribeDailyJs = read('cloudfunctions/subscribeDaily/index.js')
+  const appJs = read('miniprogram/app.js')
+  const configJs = read('miniprogram/config.js')
+  const matchJs = read('miniprogram/pages/idiom-match/idiom-match.js')
+  const matchWxml = read('miniprogram/pages/idiom-match/idiom-match.wxml')
+  const twoPlayerJs = read('miniprogram/pages/two-player-game/two-player-game.js')
+  const twoPlayerWxml = read('miniprogram/pages/two-player-game/two-player-game.wxml')
+  const daily = require('../miniprogram/utils/daily')
+  const pool = require('../data/idioms.json').idioms.filter(item => item.level <= 2)
+  const seen = new Set()
+
+  for (let i = 0; i < pool.length; i++) {
+    const date = new Date(Date.UTC(2026, 0, 1 + i)).toISOString().slice(0, 10)
+    seen.add(daily.getDailyIdiom(date).text)
+  }
+
+  assert(seen.size === pool.length, '洗牌选题应在一个题池周期内不重复')
+  assert(dailyJs.includes('DAILY_SHUFFLE_SEED') && dailyJs.includes('getDailySequence'), '小程序每日题应使用固定种子洗牌序列')
+  assert(nodeDailyJs.includes('DAILY_SHUFFLE_SEED') && cloudDailyJs.includes('DAILY_SHUFFLE_SEED') && submitResultJs.includes('DAILY_SHUFFLE_SEED'), 'Node、云函数和成绩校验应共用洗牌选题口径')
+  assert(indexJs.includes('requestDailyReminder') && retentionJs.includes('wx.requestSubscribeMessage'), '结算页应接入明日订阅提醒')
+  assert(retentionJs.includes("name: 'subscribeDaily'") && subscribeDailyJs.includes('idiom_subscriptions'), '订阅提醒应登记到云端集合')
+  assert(subscribeDailyJs.includes("action === 'send'") && subscribeDailyJs.includes('cloud.openapi.subscribeMessage.send') && subscribeDailyJs.includes('lastSentDate') && subscribeDailyJs.includes('DAILY_REMINDER_TEMPLATE_ID'), 'subscribeDaily 应支持定时批量发送订阅消息并防重复')
+  assert(configJs.includes('rewardedVideoAds') && configJs.includes('streakShield') && rewardedAdJs.includes('wx.createRewardedVideoAd'), '补签/护盾应集中配置激励视频广告位')
+  assert(appJs.includes('markStreakRecoverable') && retentionJs.includes('repairStreakWithReward'), '断签时应记录可补签状态，看广告后可修复连胜')
+  assert(indexJs.includes('claimShieldOrRepairWithAd') && retentionJs.includes('tryUseStreakShield'), '结算页应通过激励广告发放补签或护盾')
+  assert(indexJs.includes('fetchDailyStats') && getRankingJs.includes('buildStats') && indexWxml.includes('今日全网对比'), '结算页应展示今日全网对比分布')
+  assert(indexJs.includes('drawShareCard') && shareCardJs.includes('canvasToTempFilePath') && indexWxml.includes('canvas-id="shareCanvas"'), '主局分享应生成无剧透战绩图')
+  assert(shareCardJs.includes('drawHintMatchShareCard') && matchJs.includes('drawHintMatchShareCard') && matchWxml.includes('canvas-id="shareCanvas"'), '提示猜词应生成同题挑战分享图')
+  assert(shareCardJs.includes('drawDuelShareCard') && twoPlayerJs.includes('drawDuelShareCard') && twoPlayerWxml.includes('canvas-id="shareCanvas"'), '双人局应生成好友比分分享图')
+  assert(indexJs.includes('onShareTimeline') && matchJs.includes('onShareTimeline') && twoPlayerJs.includes('onShareTimeline'), '主局、提示猜词和双人局应支持朋友圈分享')
+  assert(indexWxml.includes('三步读懂部首猜词') && indexJs.includes('idiom_index_guide_seen'), '主局应有首次进入引导')
+  assert(playerJs.includes('savePlayer({ nickname })'), '随机昵称应首次生成后固化')
+  ;['share_image_ready','subscribe_daily','claim_streak_shield','use_streak_shield','repair_streak','daily_compare_loaded'].forEach(eventName => {
+    assert(logEventJs.includes("'" + eventName + "'"), '留存传播埋点事件缺失: ' + eventName)
+  })
+  assert(indexWxss.includes('.compare-panel') && indexWxss.includes('.retention-panel') && indexWxss.includes('.first-guide-card'), '留存传播 UI 应有游戏化样式')
 })
 
 test('二级页面使用印记和好友开局语义', () => {
@@ -215,6 +271,9 @@ test('双人对局公平推进和结算可信', () => {
   assert(!roomSyncJs.includes("collection('idiom_rooms')") && roomSyncJs.includes('_pollRoom(roomCode, callbacks)'), '房间状态同步应统一走脱敏云函数')
   assert(roomSyncJs.includes('doc.word || doc.hintWord'), '轮询线索同步应兼容状态接口和实时集合字段')
   assert(!twoPlayerWxml.includes('catchtap="onNextRound"'), '回合遮罩不能点击即推进，避免误触跳局')
+  assert(twoPlayerJs.includes("room.status !== 'playing'") && twoPlayerJs.includes('redirectToLobby'), '等待房间不能被对局页渲染成假开局')
+  assert(twoPlayerWxml.includes('hintInputVisible') && !twoPlayerWxml.includes('value="{{hintInput}}"') && !twoPlayerWxml.includes('maxlength="2"'), '双人线索输入不能使用受控 value/maxlength 打断中文输入法')
+  assert(twoPlayerJs.includes('_hintInput') && twoPlayerJs.includes('onHintBlur') && twoPlayerJs.includes('_clearHintInput'), '双人线索输入应使用本地变量暂存并在成功后重建输入框清空')
 })
 
 test('提示猜词故事锦囊通过激励广告解锁', () => {
@@ -255,15 +314,17 @@ test('部首提示位更容易形成开局思路', () => {
   const miniDaily = read('miniprogram/utils/daily.js')
   const nodeDaily = read('src/daily.js')
   const daily = require('../miniprogram/utils/daily')
-  const todayPuzzle = daily.getDailyIdiom('2026-07-08')
-  const todayPositions = daily.getHintPositions('2026-07-08', todayPuzzle.radicalPositions, todayPuzzle.radicals)
-  const todayRadicals = todayPositions.map(index => todayPuzzle.radicals[index])
+  const samplePuzzle = daily.getDailyIdiom('2026-07-08')
+  const samplePositions = daily.getHintPositions('2026-07-08', samplePuzzle.radicalPositions, samplePuzzle.radicals)
+  const sampleRadicals = samplePositions.map(index => samplePuzzle.radicals[index])
+  const weakRadicals = new Set(['一', '丨', '丶', '丿', '乙', '亅', '亠', '冂', '冖', '凵', '彡'])
 
   assert(!miniDaily.includes('result.push(0)') && !nodeDaily.includes('result.push(0)'), '部首提示不应固定优先暴露第 1 个字')
   assert(miniDaily.includes('避免固定暴露首字') && nodeDaily.includes('避免固定暴露首字'), '部首提示选择应声明首字偏置控制')
   assert(miniDaily.includes('WEAK_RADICALS') && nodeDaily.includes('WEAK_RADICALS'), '部首提示应弱化低信息量部首')
-  assert(todayPuzzle.text === '杯弓蛇影' && todayPositions.length === 3, '2026-07-08 应展示 3 个部首降低开局难度')
-  assert(todayRadicals.includes('弓') && !todayRadicals.includes('彡'), '杯弓蛇影应优先展示弓，避免只给弱线索彡')
+  assert(samplePositions.length === 3, '2026-07-08 应展示 3 个部首降低开局难度')
+  assert(new Set(samplePositions).size === 3 && sampleRadicals.every(Boolean), '部首提示位应去重且不能给空线索')
+  assert(sampleRadicals.filter(radical => !weakRadicals.has(radical)).length >= 2, '部首提示应至少给 2 个高信息部首')
 })
 
 test('提示猜词精选题满足内容约束', () => {
@@ -330,15 +391,15 @@ test('提示猜词题库声明递进提示结构', () => {
   assert(hintBank.__meta.hintStyle.includes('不做同义词连发'), '提示规则应禁止同义词连发')
 })
 
-test('玩家反馈高同质提示已场景化', () => {
+test('提示猜词新增典故题已场景化', () => {
   const hintBank = require('../miniprogram/data/idiom-hints')
   const expected = {
-    '聚精会神': ['束光','屏息','眼前','忘我','只看'],
-    '心惊胆战': ['骤吓','胸跳','冷汗','发颤','夜路'],
-    '提心吊胆': ['高悬','等信','怕错','未落','揪着'],
-    '胆战心惊': ['发怵','腿软','险境','余悸','冒汗'],
+    '洛阳纸贵': ['左思','三都','争抄','都城','文名'],
+    '程门立雪': ['杨时','求教','寒深','静候','尊师'],
+    '孟母三迁': ['择邻','教子','市肆','学宫','慈教'],
+    '草船借箭': ['孔明','大雾','曹营','巧取','江面'],
   }
-  const staleHints = ['集中','凝神','专注','入心','认真','合作','共做','齐力','害怕','惊惧','发慌','不安','颤抖']
+  const staleHints = ['态度','行动','口语','职场','做法','合作','共做','齐力','害怕','惊惧','发慌','不安','颤抖']
 
   Object.keys(expected).forEach(idiom => {
     const hints = hintBank[idiom].hints
@@ -356,13 +417,17 @@ test('提示猜词题库剔除四字词和同质题', () => {
     '有福同享','分秒必争','乐于助人','崇山峻岭','层峦叠嶂','奇花异草','心平气和','诚心诚意',
     '光明磊落','繁荣昌盛','昂首挺胸','骄阳似火','同心协力','齐心合力','万众一心','众志成城',
     '人山人海','团结一致','朝气蓬勃','生机勃勃','患难与共','亲密无间','兴高采烈','愁眉苦脸',
+    '一心一意','花好月圆','三心二意','四面八方','五颜六色','七嘴八舌','千军万马','万紫千红',
+    '风和日丽','鸟语花香','春暖花开','秋高气爽','心旷神怡','目瞪口呆','眉开眼笑','惊天动地',
+    '聚精会神','助人为乐','形影不离','春色满园','蒸蒸日上','欣欣向荣','雪泥鸿爪','吉光片羽',
   ]
   removedIdioms.forEach(idiom => {
     assert(!hintBank[idiom], '提示猜词题库不应保留已剔除条目: ' + idiom)
   })
-  ;['清心寡欲','坐怀不乱','乐不思蜀','叶公好龙','请君入瓮','负荆请罪','完璧归赵','毛遂自荐','一鼓作气','退避三舍'].forEach(idiom => {
+  ;['清心寡欲','坐怀不乱','乐不思蜀','叶公好龙','请君入瓮','负荆请罪','完璧归赵','毛遂自荐','一鼓作气','退避三舍','洛阳纸贵','程门立雪','孟母三迁','草船借箭'].forEach(idiom => {
     assert(hintBank[idiom], '题库应保留或补入更适合典故锦囊的成语: ' + idiom)
   })
+  assert(hintBank.__meta.curationPolicy && hintBank.__meta.curationPolicy.includes('必须有典故影子'), '提示猜词题库应声明典故专项校准口径')
 })
 
 test('提示猜词人工校准避免泛化安全词', () => {

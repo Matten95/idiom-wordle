@@ -9,6 +9,7 @@
 
 const idiomsData = require('../data/idioms.json')
 const DEFAULT_MAX_LEVEL = 2
+const DAILY_SHUFFLE_SEED = 'idiom-daily-v2'
 
 /**
  * 简单但稳定的日期哈希函数
@@ -49,13 +50,14 @@ function getDailyIdiom(dateStr) {
   const date = dateStr || getTodayString()
   // 所有人同一天同一个词，默认只从大众难度题池中选取
   const pool = getDefaultPool()
-  const index = hashDate(date) % pool.length
-  const idiom = JSON.parse(JSON.stringify(pool[index]))
+  const puzzleNumber = calculatePuzzleNumber(date)
+  const sequence = getDailySequence(pool)
+  const idiom = JSON.parse(JSON.stringify(sequence[(puzzleNumber - 1) % sequence.length]))
 
   return {
     ...idiom,
     date,
-    puzzleNumber: calculatePuzzleNumber(date),
+    puzzleNumber,
   }
 }
 
@@ -71,6 +73,26 @@ function calculatePuzzleNumber(date) {
   const d = new Date(date + 'T00:00:00+08:00')
   const epoch = new Date(EPOCH_DATE + 'T00:00:00+08:00')
   return Math.floor((d - epoch) / (1000 * 60 * 60 * 24)) + 1
+}
+
+function seededRandom(seed) {
+  let value = hashDate(seed) || 1
+  return function () {
+    value = (value * 1664525 + 1013904223) % 4294967296
+    return value / 4294967296
+  }
+}
+
+function getDailySequence(pool) {
+  const result = pool.slice()
+  const random = seededRandom(DAILY_SHUFFLE_SEED + ':' + pool.length)
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1))
+    const temp = result[i]
+    result[i] = result[j]
+    result[j] = temp
+  }
+  return result
 }
 
 /**
@@ -147,4 +169,6 @@ module.exports = {
   getTodayString,
   hashDate,
   getHintPositions,
+  getDailySequence,
+  calculatePuzzleNumber,
 }

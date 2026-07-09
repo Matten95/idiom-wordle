@@ -111,4 +111,5 @@
       <view class="btn-back" bindtap="onGoHome">返回首页</view>
     </view>
   </view>
+  <canvas canvas-id="shareCanvas" class="share-canvas"></canvas>
 </view>

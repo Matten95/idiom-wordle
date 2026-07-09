@@ -1,6 +1,6 @@
 # Phase 1 Release Gate
 
-第一阶段目标是进入安全灰度。代码闸门由 `npm test` 和 `test/project-health.js` 覆盖；以下项目需要真机或微信后台配合完成。
+第一阶段目标是进入安全灰度。代码闸门由 `npm test` 和 `test/project-health.js` 覆盖，当前代码侧能力已接入；以下仅保留真机或微信后台配合完成的未完成 TODO。
 
 ## 真机双人全链路
 

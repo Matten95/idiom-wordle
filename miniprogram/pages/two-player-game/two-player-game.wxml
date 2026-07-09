@@ -40,8 +40,18 @@
     <view class="hint-input-area">
       <view class="input-label">递一枚 2 字线索，不能含答案字</view>
       <view class="hint-input-row">
-        <input class="hint-input" type="text" placeholder="如：武器" placeholder-style="color:#59647a"
-          value="{{hintInput}}" bindinput="onHintInput" maxlength="2" />
+        <input
+          wx:if="{{hintInputVisible}}"
+          class="hint-input"
+          type="text"
+          placeholder="如：武器"
+          placeholder-style="color:#59647a"
+          hold-keyboard="{{true}}"
+          confirm-type="send"
+          bindinput="onHintInput"
+          bindblur="onHintBlur"
+          bindconfirm="onSubmitHint"
+        />
         <button class="btn-hint-submit" bindtap="onSubmitHint">递出线索</button>
       </view>
       <view class="hint-error" wx:if="{{hintError}}">{{hintError}}</view>
@@ -141,4 +151,5 @@
       <button class="btn-share" open-type="share">分享战绩</button>
     </view>
   </view>
+  <canvas canvas-id="shareCanvas" class="share-canvas"></canvas>
 </view>

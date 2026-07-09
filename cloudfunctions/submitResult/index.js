@@ -5,6 +5,8 @@ const db = cloud.database()
 const idiomsData = require('./idioms.json')
 
 const DEFAULT_MAX_LEVEL = 2
+const EPOCH = '2026-01-01'
+const DAILY_SHUFFLE_SEED = 'idiom-daily-v2'
 
 function hashDate(dateStr) {
   let hash = 0
@@ -26,8 +28,35 @@ function getToday() {
 
 function getDailyAnswer(date) {
   const pool = idiomsData.idioms.filter(item => item.level <= DEFAULT_MAX_LEVEL)
-  const index = hashDate(date) % pool.length
-  return pool[index]
+  const puzzleNumber = calculatePuzzleNumber(date)
+  const sequence = getDailySequence(pool)
+  return sequence[(puzzleNumber - 1) % sequence.length]
+}
+
+function calculatePuzzleNumber(date) {
+  const d = new Date(date + 'T00:00:00+08:00')
+  const epoch = new Date(EPOCH + 'T00:00:00+08:00')
+  return Math.floor((d - epoch) / 86400000) + 1
+}
+
+function seededRandom(seed) {
+  let value = hashDate(seed) || 1
+  return function () {
+    value = (value * 1664525 + 1013904223) % 4294967296
+    return value / 4294967296
+  }
+}
+
+function getDailySequence(pool) {
+  const result = pool.slice()
+  const random = seededRandom(DAILY_SHUFFLE_SEED + ':' + pool.length)
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1))
+    const temp = result[i]
+    result[i] = result[j]
+    result[j] = temp
+  }
+  return result
 }
 
 function normalizeAttempts(value) {

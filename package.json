@@ -6,6 +6,7 @@
   "scripts": {
     "demo": "node test/demo.js",
     "score": "node test/score.js",
+    "lint:idioms": "node scripts/lint-idioms.js",
     "sync:data": "node scripts/sync-data.js",
     "check": "node test/project-health.js",
     "test": "node test/demo.js && node test/score.js && node test/project-health.js",

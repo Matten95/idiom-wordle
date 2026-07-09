@@ -59,7 +59,9 @@ function saveAvatar(tempFilePath) {
 function getPlayerName() {
   const player = loadPlayer()
   if (player.nickname) return player.nickname
-  return generateRandomName()
+  const nickname = generateRandomName()
+  savePlayer({ nickname })
+  return nickname
 }
 
 function generateRandomName() {

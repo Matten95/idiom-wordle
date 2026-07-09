@@ -140,6 +140,38 @@
         <text>{{resultReview}}</text>
       </view>
 
+      <view class="compare-panel" wx:if="{{comparisonText && !practiceMode}}">
+        <text class="compare-title">今日全网对比</text>
+        <text class="compare-text">{{comparisonText}}</text>
+        <view class="compare-bars">
+          <view class="compare-row" wx:for="{{comparisonBars}}" wx:key="key">
+            <text class="compare-label">{{item.label}}</text>
+            <view class="compare-track">
+              <view class="compare-fill" style="width: {{item.width}}%;"></view>
+            </view>
+            <text class="compare-count">{{item.count}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="retention-panel" wx:if="{{!practiceMode}}">
+        <view class="retention-copy">
+          <text class="retention-title">明日新题</text>
+          <text class="retention-text">订阅提醒，明天继续盖章。</text>
+          <text class="retention-state" wx:if="{{reminderStatusText}}">{{reminderStatusText}}</text>
+        </view>
+        <button class="btn-mini" bindtap="onRequestReminder">提醒我</button>
+      </view>
+
+      <view class="retention-panel shield-panel" wx:if="{{!practiceMode}}">
+        <view class="retention-copy">
+          <text class="retention-title">{{shieldTitleText}}</text>
+          <text class="retention-text">{{shieldDescText}}</text>
+          <text class="retention-state" wx:if="{{shieldStatusText}}">{{shieldStatusText}}</text>
+        </view>
+        <button class="btn-mini btn-shield" bindtap="onClaimShield" disabled="{{shieldLoading}}">{{shieldActionText}}</button>
+      </view>
+
       <!-- 分享按钮 -->
       <button class="btn btn-share" open-type="share">
         找朋友来比试比试
@@ -161,6 +193,27 @@
       </view>
     </view>
   </view>
+
+  <view class="first-guide-overlay" wx:if="{{showFirstGuide}}" bindtap="onCloseFirstGuide">
+    <view class="first-guide-card" catchtap="onStopGuideTap">
+      <view class="first-guide-head">
+        <text class="first-guide-kicker">新手开局</text>
+        <text class="first-guide-title">三步读懂部首猜词</text>
+      </view>
+      <view class="first-guide-list">
+        <view class="first-guide-item" wx:for="{{firstGuideSteps}}" wx:key="key">
+          <text class="first-guide-mark">{{index + 1}}</text>
+          <view class="first-guide-copy">
+            <text class="first-guide-item-title">{{item.title}}</text>
+            <text class="first-guide-item-text">{{item.text}}</text>
+          </view>
+        </view>
+      </view>
+      <button class="btn-guide-start" bindtap="onCloseFirstGuide">开始破题</button>
+    </view>
+  </view>
+
+  <canvas canvas-id="shareCanvas" class="share-canvas"></canvas>
   <!-- 底部导航 -->
   <view class="tab-bar">
     <view class="tab-item" bindtap="onNavHome">

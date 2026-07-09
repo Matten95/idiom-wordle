@@ -5,6 +5,7 @@
 const { watchRoom, watchHints } = require('../../utils/room-sync')
 const { isCloudReady } = require('../../utils/cloud')
 const { getPlayerName } = require('../../utils/player')
+const { drawDuelShareCard } = require('../../utils/share-card')
 
 const MAX_HINTS = 5
 
@@ -62,6 +63,15 @@ function getFriendlyGameError(rawMsg) {
   return '好友桌暂时没连上，稍后再试。'
 }
 
+function redirectToLobby(roomCode, message) {
+  wx.showToast({ title: message, icon: 'none' })
+  setTimeout(() => {
+    wx.redirectTo({
+      url: '/pages/room-lobby/room-lobby?code=' + encodeURIComponent(roomCode),
+    })
+  }, 800)
+}
+
 Page({
   data: {
     // 身份
@@ -81,6 +91,7 @@ Page({
     hints: [],            // [{word, submittedAt}]
     hintSlots: [0, 1, 2, 3, 4],
     hintInput: '',
+    hintInputVisible: true,
     hintSubmitted: false,
     hinterGuideText: buildHinterGuide(0),
 
@@ -109,6 +120,7 @@ Page({
     syncStatusText: '正在摆好好友对局桌...',
     roundEndHintText: '',
     advancingRound: false,
+    shareImagePath: '',
 
     // 输入验证
     hintError: '',
@@ -120,6 +132,7 @@ Page({
   _roundTimer: null,
   _playerOpenid: '',
   _advancing: false,
+  _hintInput: '',
 
   onLoad(options) {
     const roomCode = options.roomCode || ''
@@ -145,6 +158,11 @@ Page({
         return
       }
       const room = res.result.room
+      if (room.status !== 'playing' || !room.gameState || !room.gameState.currentIdiom) {
+        this.setData({ status: 'loading', syncStatusText: '好友还没入席，先回大厅等开局。' })
+        redirectToLobby(roomCode, '好友还没入席')
+        return
+      }
       const playerName = getPlayerName()
       this._playerOpenid = res.result.openid || ''
       const { me, opponent } = this._getPlayerPair(room, playerName)
@@ -236,14 +254,24 @@ Page({
       this._stopSync()
       this._stopTimer()
       const { me, opponent } = this._getPlayerPair(room, this.data.playerName)
+      const finalResults = buildFinalResults(room)
       this.setData({
         status: 'finished',
         showResult: true,
-        finalResults: buildFinalResults(room),
+        finalResults,
         myScore: me.score || 0,
         opponentScore: opponent.score || 0,
         syncStatusText: '这桌已收桌，可以分享战绩或再开一桌。',
       })
+      this.prepareDuelShareImage(finalResults)
+      return
+    }
+
+    if (room.status !== 'playing' || !room.gameState || !room.gameState.currentIdiom) {
+      this._stopSync()
+      this._stopTimer()
+      this.setData({ status: 'loading', syncStatusText: '这桌还没开局，先回大厅等好友入席。' })
+      redirectToLobby(this.data.roomCode, '好友还没入席')
       return
     }
 
@@ -254,6 +282,7 @@ Page({
       // 新回合开始
       this._stopTimer()
       const idiomText = me.role === 'hinter' ? room.gameState.currentIdiom : ''
+      this._hintInput = ''
       this.setData({
         currentRound: room.gameState.currentRound,
         myRole: me.role,
@@ -263,6 +292,7 @@ Page({
         idiomMasked: me.role === 'guesser' ? '？？？？' : '',
         hints: [],
         hintInput: '',
+        hintInputVisible: true,
         hintError: '',
         hintSubmitted: false,
         inputText: '',
@@ -330,14 +360,26 @@ Page({
 
   /** ========== 提示者操作 ========== */
   onHintInput(e) {
-    const val = (e.detail.value || '').slice(0, 2)
-    this.setData({ hintInput: val, hintError: '' })
+    this._hintInput = Array.from(e.detail.value || '').join('')
+    if (this.data.hintError) this.setData({ hintError: '' })
+  },
+
+  onHintBlur(e) {
+    this._hintInput = Array.from(e.detail.value || '').join('')
+  },
+
+  _clearHintInput() {
+    this._hintInput = ''
+    this.setData({ hintInput: '', hintInputVisible: false })
+    setTimeout(() => {
+      this.setData({ hintInputVisible: true })
+    }, 30)
   },
 
   async onSubmitHint() {
     if (this.data.myRole !== 'hinter') return
-    const hintWord = this.data.hintInput.trim()
-    if (hintWord.length !== 2) {
+    const hintWord = (this._hintInput || '').trim()
+    if (Array.from(hintWord).length !== 2) {
       this.setData({ hintError: '请输入2个汉字' })
       return
     }
@@ -352,7 +394,8 @@ Page({
       })
 
       if (res.result && res.result.ok) {
-        this.setData({ hintInput: '', hintError: '', hintSubmitted: true })
+        this._clearHintInput()
+        this.setData({ hintError: '', hintSubmitted: true })
         setTimeout(() => this.setData({ hintSubmitted: false }), 1500)
       } else {
         this.setData({ hintError: res.result.reason || res.result.error || '这枚线索递不出去，换一个试试' })
@@ -474,15 +517,18 @@ Page({
       if (res.result && res.result.ok) {
         if (res.result.finished) {
           this._stopTimer()
+          const finalResults = buildFinalResults(res.result.room || {})
           this.setData({
             status: 'finished',
             showResult: true,
-            finalResults: buildFinalResults(res.result.room || {}),
+            finalResults,
           })
+          this.prepareDuelShareImage(finalResults)
         } else {
           const room = res.result.room
           const { me, opponent } = this._getPlayerPair(room, data.playerName)
           const idiomText = me.role === 'hinter' ? room.gameState.currentIdiom : ''
+          this._hintInput = ''
           this.setData({
             currentRound: room.gameState.currentRound,
             myRole: me.role,
@@ -492,6 +538,7 @@ Page({
             idiomMasked: me.role === 'guesser' ? '？？？？' : '',
             hints: [],
             hintInput: '',
+            hintInputVisible: true,
             hintError: '',
             hintSubmitted: false,
             inputText: '',
@@ -567,6 +614,22 @@ Page({
     wx.reLaunch({ url: '/pages/home/home' })
   },
 
+  prepareDuelShareImage(finalResults) {
+    const d = this.data
+    const results = finalResults || d.finalResults || { rounds: [] }
+    drawDuelShareCard(this, {
+      roomText: d.totalRounds + ' 局好友对战',
+      myName: d.playerName || '我',
+      opponentName: d.opponentName || '好友',
+      myScore: d.myScore || 0,
+      opponentScore: d.opponentScore || 0,
+      resultText: d.myScore >= d.opponentScore ? '我赢了这桌' : '我差点翻盘',
+      rounds: results.rounds || [],
+    }).then(path => {
+      if (path) this.setData({ shareImagePath: path })
+    })
+  },
+
   onShareGame() {
     const d = this.data
     if (d.status === 'finished') {
@@ -574,6 +637,7 @@ Page({
       return {
         title: '成语好友局 · ' + resultText + ' ' + d.myScore + ':' + d.opponentScore + '\n来复仇开一桌',
         path: '/pages/room-lobby/room-lobby',
+        imageUrl: d.shareImagePath || '',
       }
     }
     const path = d.roomCode
@@ -582,8 +646,16 @@ Page({
     return {
       title: '成语好友局 · 我在桌上等你\n比分 ' + d.myScore + ':' + d.opponentScore,
       path,
+      imageUrl: d.shareImagePath || '',
     }
   },
 
   onShareAppMessage() { return this.onShareGame() },
+  onShareTimeline() {
+    return {
+      title: '成语好友局 · 来复仇开一桌',
+      query: '',
+      imageUrl: this.data.shareImagePath || '',
+    }
+  },
 })

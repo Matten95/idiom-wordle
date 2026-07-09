@@ -56,6 +56,40 @@ function fetchRanking(date) {
   return Promise.resolve(loadLocalRanking())
 }
 
+function fetchDailyStats(date) {
+  if (isCloudReady()) {
+    return wx.cloud.callFunction({
+      name: 'getRanking',
+      data: { date: date, onlyStats: true },
+    }).then(function (res) {
+      if (res.result && res.result.ok && res.result.stats) {
+        return { source: 'cloud', stats: res.result.stats }
+      }
+      return { source: 'local', stats: buildLocalStats(date) }
+    }).catch(function (e) {
+      console.warn('云端统计获取失败，使用本地:', e.message)
+      return { source: 'local', stats: buildLocalStats(date) }
+    })
+  }
+  return Promise.resolve({ source: 'local', stats: buildLocalStats(date) })
+}
+
+function buildLocalStats(date) {
+  var history = loadHistory().filter(function (h) { return !date || h.date === date })
+  var won = history.filter(function (h) { return h.won })
+  var attemptDist = [0, 0, 0, 0, 0, 0]
+  won.forEach(function (h) {
+    if (h.attempts >= 1 && h.attempts <= 6) attemptDist[h.attempts - 1] += 1
+  })
+  return {
+    total: history.length,
+    winCount: won.length,
+    loseCount: history.length - won.length,
+    winRate: history.length > 0 ? Math.round(won.length * 100 / history.length) : 0,
+    attemptDist: attemptDist,
+  }
+}
+
 function loadLocalRanking() {
   var getPlayerName = require('./player').getPlayerName
   var history = loadHistory()
@@ -73,4 +107,4 @@ function loadLocalRanking() {
   return { source: 'local', rankList: rankList }
 }
 
-module.exports = { submitGameResult, fetchRanking, isCloudReady }
+module.exports = { submitGameResult, fetchRanking, fetchDailyStats, isCloudReady }
