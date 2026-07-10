@@ -557,7 +557,7 @@
         "yì"
       ],
       "radicals": [
-        "二",
+        "一",
         "心",
         "二",
         "心"
@@ -582,7 +582,7 @@
         "情感"
       ],
       "radicalPositions": [
-        "bottom",
+        "center",
         "center",
         "center",
         "bottom"
@@ -698,7 +698,7 @@
         "shé"
       ],
       "radicals": [
-        "乚",
+        "一",
         "口",
         "八",
         "舌"
@@ -745,7 +745,7 @@
         "máo"
       ],
       "radicals": [
-        "丿",
+        "乙",
         "牛",
         "一",
         "毛"
@@ -842,7 +842,7 @@
         "白",
         "又",
         "白",
-        "口"
+        "丨"
       ],
       "strokes": [
         6,
@@ -887,7 +887,7 @@
       ],
       "radicals": [
         "十",
-        "车",
+        "冖",
         "一",
         "马"
       ],
@@ -912,7 +912,7 @@
       ],
       "radicalPositions": [
         "bottom",
-        "bottom",
+        "top",
         "top",
         "center"
       ]
@@ -983,7 +983,7 @@
         "风",
         "口",
         "日",
-        "冂"
+        "一"
       ],
       "strokes": [
         4,
@@ -1008,7 +1008,7 @@
         "center",
         "right",
         "center",
-        "bottom"
+        "top"
       ]
     },
     {
@@ -1546,7 +1546,7 @@
       "radicals": [
         "韦",
         "纟",
-        "二",
+        "一",
         "纟"
       ],
       "strokes": [
@@ -1571,7 +1571,7 @@
       "radicalPositions": [
         "center",
         "left",
-        "bottom",
+        "center",
         "left"
       ]
     },
@@ -1826,7 +1826,7 @@
         "dǎn"
       ],
       "radicals": [
-        "臣",
+        "卜",
         "艹",
         "⺌",
         "⺼"
@@ -1851,7 +1851,7 @@
         "励志"
       ],
       "radicalPositions": [
-        "left",
+        "right",
         "top",
         "center",
         "left"
@@ -1923,7 +1923,7 @@
         "七",
         "方",
         "攵",
-        "十"
+        "页"
       ],
       "strokes": [
         5,
@@ -1948,7 +1948,7 @@
         "center",
         "left",
         "right",
-        "center"
+        "top"
       ]
     },
     {
@@ -2580,7 +2580,7 @@
       "radicals": [
         "犭",
         "犭",
-        "力",
+        "丶",
         "女"
       ],
       "strokes": [
@@ -2605,7 +2605,7 @@
       "radicalPositions": [
         "left",
         "left",
-        "center",
+        "top",
         "left"
       ]
     },
@@ -2719,7 +2719,7 @@
         "lú"
       ],
       "radicals": [
-        "二",
+        "一",
         "页",
         "艹",
         "广"
@@ -2744,7 +2744,7 @@
         "典故"
       ],
       "radicalPositions": [
-        "bottom",
+        "center",
         "right",
         "top",
         "center"
@@ -2862,7 +2862,7 @@
       "radicals": [
         "虫",
         "⺼",
-        "⺌",
+        "彐",
         "车"
       ],
       "strokes": [
@@ -2887,7 +2887,7 @@
       "radicalPositions": [
         "left",
         "bottom",
-        "top",
+        "bottom",
         "center"
       ]
     },
@@ -3800,7 +3800,7 @@
         "méi"
       ],
       "radicals": [
-        "兴",
+        "丶",
         "木",
         "齐",
         "目"
@@ -4319,7 +4319,7 @@
       "radicals": [
         "入",
         "木",
-        "二",
+        "一",
         "刀"
       ],
       "strokes": [
@@ -4344,7 +4344,7 @@
       "radicalPositions": [
         "center",
         "center",
-        "bottom",
+        "center",
         "bottom"
       ]
     },
@@ -4696,7 +4696,7 @@
         "黹",
         "黹",
         "文",
-        "立"
+        "音"
       ],
       "strokes": [
         19,
@@ -4721,7 +4721,7 @@
         "left",
         "left",
         "center",
-        "center"
+        "top"
       ]
     },
     {
@@ -5166,7 +5166,7 @@
         "艹",
         "艹",
         "丶",
-        "立"
+        "亠"
       ],
       "strokes": [
         12,
@@ -5258,7 +5258,7 @@
       ],
       "radicals": [
         "页",
-        "干",
+        "页",
         "无",
         "⺼"
       ],
@@ -5283,7 +5283,7 @@
       ],
       "radicalPositions": [
         "right",
-        "left",
+        "right",
         "center",
         "right"
       ]
@@ -5636,7 +5636,7 @@
         "母",
         "禾",
         "钅",
-        "彐"
+        "火"
       ],
       "strokes": [
         13,
@@ -5661,7 +5661,7 @@
         "center",
         "top",
         "left",
-        "top"
+        "bottom"
       ]
     },
     {
@@ -5729,7 +5729,7 @@
       "radicals": [
         "氵",
         "竹",
-        "亠",
+        "儿",
         "攵"
       ],
       "strokes": [
@@ -5754,7 +5754,7 @@
       "radicalPositions": [
         "left",
         "top",
-        "top",
+        "bottom",
         "right"
       ]
     },
@@ -5870,7 +5870,7 @@
       "radicals": [
         "土",
         "羽",
-        "丿",
+        "大",
         "马"
       ],
       "strokes": [
@@ -6011,7 +6011,7 @@
       "radicals": [
         "田",
         "饣",
-        "亠",
+        "儿",
         "饣"
       ],
       "strokes": [
@@ -6036,7 +6036,7 @@
       "radicalPositions": [
         "bottom",
         "left",
-        "top",
+        "bottom",
         "left"
       ]
     },
@@ -6150,10 +6150,10 @@
         "sān"
       ],
       "radicals": [
-        "兴",
+        "丶",
         "一",
         "又",
-        "二"
+        "一"
       ],
       "strokes": [
         9,
@@ -6178,7 +6178,7 @@
         "top",
         "center",
         "center",
-        "bottom"
+        "center"
       ]
     },
     {
@@ -6339,7 +6339,7 @@
       ],
       "radicals": [
         "月",
-        "二",
+        "一",
         "日",
         "囗"
       ],
@@ -6364,7 +6364,7 @@
       ],
       "radicalPositions": [
         "right",
-        "bottom",
+        "center",
         "bottom",
         "center"
       ]
@@ -6387,7 +6387,7 @@
       "radicals": [
         "扌",
         "鹿",
-        "力",
+        "丶",
         "马"
       ],
       "strokes": [
@@ -6412,7 +6412,7 @@
       "radicalPositions": [
         "left",
         "center",
-        "center",
+        "top",
         "center"
       ]
     },
@@ -6716,8 +6716,8 @@
       "radicals": [
         "纟",
         "氵",
-        "二",
-        "立"
+        "一",
+        "音"
       ],
       "strokes": [
         6,
@@ -6741,8 +6741,8 @@
       "radicalPositions": [
         "left",
         "left",
-        "bottom",
-        "center"
+        "center",
+        "top"
       ]
     },
     {
@@ -7045,8 +7045,8 @@
       "radicals": [
         "辶",
         "辶",
-        "二",
-        "人"
+        "一",
+        "舌"
       ],
       "strokes": [
         9,
@@ -7070,8 +7070,8 @@
       "radicalPositions": [
         "center",
         "center",
-        "bottom",
-        "top"
+        "center",
+        "bottom"
       ]
     },
     {
@@ -7093,7 +7093,7 @@
         "疒",
         "入",
         "⺼",
-        "月"
+        "⺼"
       ],
       "strokes": [
         10,
@@ -7186,7 +7186,7 @@
       "radicals": [
         "犭",
         "儿",
-        "二",
+        "一",
         "穴"
       ],
       "strokes": [
@@ -7211,7 +7211,7 @@
       "radicalPositions": [
         "left",
         "center",
-        "bottom",
+        "center",
         "top"
       ]
     },
@@ -7374,7 +7374,7 @@
       "radicals": [
         "七",
         "山",
-        "一",
+        "冂",
         "走"
       ],
       "strokes": [
@@ -7748,7 +7748,7 @@
         "shī"
       ],
       "radicals": [
-        "乚",
+        "一",
         "止",
         "戈",
         "讠"
@@ -8690,7 +8690,7 @@
       "radicals": [
         "石",
         "钅",
-        "丿",
+        "里",
         "囗"
       ],
       "strokes": [
@@ -8878,7 +8878,7 @@
       "radicals": [
         "七",
         "穴",
-        "一",
+        "亅",
         "又"
       ],
       "strokes": [
@@ -9065,7 +9065,7 @@
       ],
       "radicals": [
         "耂",
-        "⺌",
+        "彐",
         "皿",
         "士"
       ],
@@ -9090,7 +9090,7 @@
       ],
       "radicalPositions": [
         "center",
-        "top",
+        "bottom",
         "bottom",
         "right"
       ]
@@ -9348,7 +9348,7 @@
       "radicals": [
         "子",
         "母",
-        "二",
+        "一",
         "辶"
       ],
       "strokes": [
@@ -9373,7 +9373,7 @@
       "radicalPositions": [
         "top",
         "center",
-        "bottom",
+        "center",
         "center"
       ]
     },
@@ -9913,7 +9913,7 @@
         "氵",
         "鱼",
         "艹",
-        "厂"
+        "隹"
       ],
       "strokes": [
         7,

@@ -1,110 +1,101 @@
 /**
  * 云开发辅助模块
- * 封装云函数调用，自动降级到本地存储
+ * 排行榜只接受服务端逐次判分的可信成绩；云端不可用时不伪装为全网数据。
  */
-const { loadHistory, saveGameResult } = require('./engine')
+const { saveGameResult } = require('./engine')
 
 function isCloudReady() {
   var app = getApp()
   return app && app.globalData && app.globalData.cloudReady
 }
 
-/** 提交游戏结果（云端 + 本地双写） */
-function submitGameResult(game) {
-  // 始终保存本地记录
-  saveGameResult(game)
-
-  // 尝试同步到云端
-  if (isCloudReady()) {
-    var getPlayerName = require('./player').getPlayerName
-    return wx.cloud.callFunction({
-      name: 'submitResult',
-      data: {
-        date: game.date,
-        answerText: game.answer ? game.answer.text : '',
-        attempts: game.attempts.length,
-        won: game.status === 'won',
-        playerName: getPlayerName(),
-      },
-    }).then(function (res) {
-      return { cloud: res.result, local: true }
-    }).catch(function (e) {
-      console.warn('云端提交失败，仅保存本地:', e.message)
-      return { local: true }
-    })
+function unavailable(error) {
+  return {
+    ok: false,
+    unavailable: true,
+    code: error && error.code || 'CLOUD_UNAVAILABLE',
+    error: error && (error.error || error.message) || '云端暂时不可用',
   }
-  return Promise.resolve({ local: true })
 }
 
-/** 获取排行榜（优先云端，降级本地） */
+function callDailyGame(action, data) {
+  if (!isCloudReady()) return Promise.resolve(unavailable())
+  return wx.cloud.callFunction({
+    name: 'submitResult',
+    data: Object.assign({ action: action }, data || {}),
+  }).then(function (res) {
+    return res.result && res.result.ok ? res.result : unavailable(res.result || {})
+  }).catch(function (error) {
+    console.warn('可信每日局调用失败:', error.message)
+    return unavailable(error)
+  })
+}
+
+function fetchDailyPuzzle(date) {
+  return callDailyGame('puzzle', { date: date })
+}
+
+function startDailyGame(date) {
+  return callDailyGame('start', { date: date })
+}
+
+function submitDailyGuess(date, guessText) {
+  var getPlayerName = require('./player').getPlayerName
+  return callDailyGame('guess', {
+    date: date,
+    guessText: guessText,
+    playerName: getPlayerName(),
+  })
+}
+
+function saveLocalGameResult(game) {
+  saveGameResult(game)
+  return { local: true }
+}
+
 function fetchRanking(date) {
-  if (isCloudReady()) {
-    return wx.cloud.callFunction({
-      name: 'getRanking',
-      data: { date: date, limit: 50 },
-    }).then(function (res) {
-      if (res.result && res.result.ok && res.result.rankList && res.result.rankList.length > 0) {
-        return { source: 'cloud', rankList: res.result.rankList }
+  if (!isCloudReady()) return Promise.resolve({ source: 'unavailable', unavailable: true, rankList: [] })
+  return wx.cloud.callFunction({
+    name: 'getRanking',
+    data: { date: date, limit: 50 },
+  }).then(function (res) {
+    if (res.result && res.result.ok) {
+      return {
+        source: 'cloud',
+        rankList: res.result.rankList || [],
+        stats: res.result.stats || {},
+        total: res.result.total || 0,
       }
-      // 云端返回空，降级本地
-      return loadLocalRanking()
-    }).catch(function (e) {
-      console.warn('云端排行获取失败，使用本地:', e.message)
-      return loadLocalRanking()
-    })
-  }
-  return Promise.resolve(loadLocalRanking())
+    }
+    return { source: 'unavailable', unavailable: true, rankList: [], error: res.result && res.result.error }
+  }).catch(function (error) {
+    console.warn('云端排行获取失败:', error.message)
+    return { source: 'unavailable', unavailable: true, rankList: [], error: error.message }
+  })
 }
 
 function fetchDailyStats(date) {
-  if (isCloudReady()) {
-    return wx.cloud.callFunction({
-      name: 'getRanking',
-      data: { date: date, onlyStats: true },
-    }).then(function (res) {
-      if (res.result && res.result.ok && res.result.stats) {
-        return { source: 'cloud', stats: res.result.stats }
-      }
-      return { source: 'local', stats: buildLocalStats(date) }
-    }).catch(function (e) {
-      console.warn('云端统计获取失败，使用本地:', e.message)
-      return { source: 'local', stats: buildLocalStats(date) }
-    })
-  }
-  return Promise.resolve({ source: 'local', stats: buildLocalStats(date) })
-}
-
-function buildLocalStats(date) {
-  var history = loadHistory().filter(function (h) { return !date || h.date === date })
-  var won = history.filter(function (h) { return h.won })
-  var attemptDist = [0, 0, 0, 0, 0, 0]
-  won.forEach(function (h) {
-    if (h.attempts >= 1 && h.attempts <= 6) attemptDist[h.attempts - 1] += 1
-  })
-  return {
-    total: history.length,
-    winCount: won.length,
-    loseCount: history.length - won.length,
-    winRate: history.length > 0 ? Math.round(won.length * 100 / history.length) : 0,
-    attemptDist: attemptDist,
-  }
-}
-
-function loadLocalRanking() {
-  var getPlayerName = require('./player').getPlayerName
-  var history = loadHistory()
-  history.sort(function (a, b) { return b.date.localeCompare(a.date) })
-  var rankList = history.map(function (h, idx) {
-    return {
-      rank: idx + 1,
-      player: getPlayerName(),
-      answerText: h.answerText || '???',
-      attempts: h.attempts,
-      won: h.won,
-      date: h.date,
+  if (!isCloudReady()) return Promise.resolve({ source: 'unavailable', unavailable: true, stats: {} })
+  return wx.cloud.callFunction({
+    name: 'getRanking',
+    data: { date: date, onlyStats: true },
+  }).then(function (res) {
+    if (res.result && res.result.ok && res.result.stats) {
+      return { source: 'cloud', stats: res.result.stats }
     }
+    return { source: 'unavailable', unavailable: true, stats: {} }
+  }).catch(function (error) {
+    console.warn('云端统计获取失败:', error.message)
+    return { source: 'unavailable', unavailable: true, stats: {} }
   })
-  return { source: 'local', rankList: rankList }
 }
 
-module.exports = { submitGameResult, fetchRanking, fetchDailyStats, isCloudReady }
+module.exports = {
+  fetchDailyPuzzle,
+  startDailyGame,
+  submitDailyGuess,
+  saveLocalGameResult,
+  fetchRanking,
+  fetchDailyStats,
+  isCloudReady,
+}

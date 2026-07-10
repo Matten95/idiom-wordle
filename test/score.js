@@ -163,16 +163,26 @@ test('5.3 返回完整数据', () => {
 // ============================================================
 //  6. 部首提示逻辑 (100分)
 // ============================================================
-test('6.1 getHintPositions 返回3个位置', () => {
-  const d = getDailyIdiom()
-  const pos = getHintPositions(undefined, d.radicalPositions, d.radicals)
-  assert(pos.length === 3, `应返回3个位置, 得${pos.length}`)
+test('6.1 全词库返回2-3个均衡位置', () => {
+  IDIOMS.idioms.forEach(d => {
+    const pos = getHintPositions(undefined, d.radicalPositions, d.radicals, d.chars)
+    assert(pos.length >= 2 && pos.length <= 3, `${d.text} 应返回2-3个位置, 得${pos.length}`)
+    assert(pos.some(index => index < 2), `${d.text} 缺少前两个字的方向线索`)
+    assert(pos.some(index => index >= 2), `${d.text} 缺少后两个字的校正线索`)
+  })
 })
 test('6.2 提示位置合理', () => {
-  const d = getDailyIdiom()
-  const pos = getHintPositions(undefined, d.radicalPositions, d.radicals)
-  assert(pos.length === 3, '应给出3个开局部首')
-  pos.forEach(p => assert(p >= 0 && p <= 3, `位置${p}越界`))
+  IDIOMS.idioms.forEach(d => {
+    const pos = getHintPositions(undefined, d.radicalPositions, d.radicals, d.chars)
+    assert(new Set(pos).size === pos.length, `${d.text} 提示位置重复`)
+    pos.forEach(p => {
+      assert(p >= 0 && p <= 3, `${d.text} 位置${p}越界`)
+      assert(d.radicals[p], `${d.text} 位置${p}没有部首数据`)
+    })
+  })
+  const target = IDIOMS.idioms.find(item => item.text === '鸡犬升天')
+  const targetPos = getHintPositions(undefined, target.radicalPositions, target.radicals, target.chars)
+  assert(targetPos.join(',') === '0,3', `鸡犬升天应避开“升→十”，当前为${targetPos.join(',')}`)
 })
 
 // ============================================================

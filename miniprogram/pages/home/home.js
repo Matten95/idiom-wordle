@@ -1,6 +1,7 @@
 const { getDailyIdiom, getToday, getHintPositions } = require('../../utils/daily')
 const { getPlayerName } = require('../../utils/player')
 const { logEvent } = require('../../utils/telemetry')
+const { fetchDailyPuzzle } = require('../../utils/cloud')
 
 Page({
   data: {
@@ -67,10 +68,11 @@ Page({
         todaySealText: todayPlayed ? '已盖章' : '待破题',
         todayGoalText: todayPlayed ? '去好友局复仇' : '首胜 +1 印章',
         actionCards: this.buildActionCards(todayPlayed),
-        rallyText: todayPlayed ? '今日已通关，去历史印记看看谁更快。' : '今日谜题已上新，先破主局再练手。',
+        rallyText: todayPlayed ? '今日已通关，去今日排行看看谁更快。' : '今日谜题已上新，先破主局再练手。',
         streakDays,
         todayPlayed,
       })
+      this.refreshSecurePuzzle(today)
     } catch (e) {
       console.error('home onLoad error:', e)
       const playerName = getPlayerName()
@@ -97,6 +99,19 @@ Page({
     }
   },
 
+  refreshSecurePuzzle(today) {
+    fetchDailyPuzzle(today).then(res => {
+      if (!res.ok || !res.puzzle) return
+      const { hintCells, revealedCount } = this.buildHints(res.puzzle)
+      this.setData({
+        puzzleNumberText: `第 ${res.puzzle.puzzleNumber} 题`,
+        hintCells,
+        revealedCountText: `已揭 ${revealedCount}/4`,
+        dailyNote: this.pickDailyNote(res.puzzle.puzzleNumber),
+      })
+    })
+  },
+
   buildInitial(name) {
     return Array.from(name || '成')[0] || '成'
   },
@@ -108,9 +123,25 @@ Page({
   },
 
   buildHints(idiom) {
+    if (idiom.hintRadicals) {
+      const indexLabels = ['一', '二', '三', '四']
+      const hintCells = indexLabels.map((label, index) => {
+        const radical = idiom.hintRadicals[index] || '?'
+        const hasHint = radical !== '?'
+        return {
+          key: `cell-${index}`,
+          indexLabel: label,
+          radical,
+          hasHint,
+          toneClass: hasHint ? 'cell-revealed' : 'cell-hidden',
+          positionClass: `hint-${idiom.hintPositions[index] || 'center'}`,
+        }
+      })
+      return { hintCells, revealedCount: hintCells.filter(cell => cell.hasHint).length }
+    }
     const rads = idiom.radicals || []
     const posData = idiom.radicalPositions || []
-    const pickPos = getHintPositions(idiom.date, posData, rads)
+    const pickPos = getHintPositions(idiom.date, posData, rads, idiom.chars)
     const indexLabels = ['一', '二', '三', '四']
     const hintCells = indexLabels.map((label, index) => {
       const hasHint = Boolean(pickPos.includes(index) && rads[index])

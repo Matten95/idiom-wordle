@@ -244,6 +244,7 @@ Page({
     inputChars: ['', '', '', ''],
     inputBoxes: buildInputBoxes(['', '', '', '']),
     inputFocused: false,
+    keyboardReady: true,
     canSubmit: false,
     inputStatus: '',
     guessAssistText: '',
@@ -496,7 +497,7 @@ Page({
 
   onInputChange(e) {
     const text = e.detail.value || ''
-    const allChars = Array.from(text).slice(0, 4)
+    const allChars = Array.from(text).filter(c => /^[一-鿿]$/.test(c)).slice(0, 4)
     const chars = ['', '', '', '']
     allChars.forEach((c, i) => { chars[i] = c })
     const canSubmit = allChars.length === 4
@@ -531,7 +532,10 @@ Page({
 
   onClearInput() {
     const chars = ['', '', '', '']
-    this.setData({ inputText: '', inputChars: chars, inputBoxes: buildInputBoxes(chars), inputFocused: true, canSubmit: false, inputStatus: '' })
+    this.setData({ keyboardReady: false, inputFocused: false })
+    setTimeout(() => {
+      this.setData({ inputText: '', inputChars: chars, inputBoxes: buildInputBoxes(chars), keyboardReady: true, inputFocused: true, canSubmit: false, inputStatus: '' })
+    }, 100)
   },
 
   onSubmitGuess() {

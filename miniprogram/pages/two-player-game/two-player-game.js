@@ -100,6 +100,7 @@ Page({
     inputChars: ['', '', '', ''],
     inputSlots: [0, 1, 2, 3],
     inputFocused: false,
+    keyboardReady: true,
     canSubmit: false,
     guesserGuideText: buildGuesserGuide(0),
     surrenderLoading: false,
@@ -409,12 +410,12 @@ Page({
 
   /** ========== 猜词者操作 ========== */
   onInputChange(e) {
-    const text = (e.detail.value || '').slice(0, 4)
-    const allChars = Array.from(text)
+    const text = e.detail.value || ''
+    const allChars = Array.from(text).filter(c => /^[一-鿿]$/.test(c)).slice(0, 4)
     const chars = ['', '', '', '']
     allChars.forEach((c, i) => { if (i < 4) chars[i] = c })
     const canSubmit = allChars.length === 4
-    this.setData({ inputText: text, inputChars: chars, canSubmit, guessError: '' })
+    this.setData({ inputText: allChars.join(''), inputChars: chars, canSubmit, guessError: '' })
   },
 
   onInputFocus() {
@@ -430,7 +431,10 @@ Page({
   },
 
   onClearInput() {
-    this.setData({ inputText: '', inputChars: ['', '', '', ''], inputFocused: true, canSubmit: false, guessError: '' })
+    this.setData({ keyboardReady: false, inputFocused: false })
+    setTimeout(() => {
+      this.setData({ inputText: '', inputChars: ['', '', '', ''], keyboardReady: true, inputFocused: true, canSubmit: false, guessError: '' })
+    }, 100)
   },
 
   async onSubmitGuess() {

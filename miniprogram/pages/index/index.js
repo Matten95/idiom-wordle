@@ -1,7 +1,7 @@
 const { getDailyIdiom, getRandomIdiom, getToday, getYesterday, getHintPositions } = require('../../utils/daily')
-const { scoreGuess, parsePinyin, getPraise, loadHistory } = require('../../utils/engine')
+const { scoreGuess, getPraise } = require('../../utils/engine')
 const { getPlayerName } = require('../../utils/player')
-const { submitGameResult, fetchDailyStats } = require('../../utils/cloud')
+const { startDailyGame, submitDailyGuess, saveLocalGameResult, fetchDailyStats } = require('../../utils/cloud')
 const { logEvent } = require('../../utils/telemetry')
 const { requestDailyReminder, claimShieldOrRepairWithAd, getRetentionState } = require('../../utils/retention')
 const { drawShareCard } = require('../../utils/share-card')
@@ -13,12 +13,15 @@ Page({
     dateDisplay: '',
     date: '',
     hintTitle: '今日部首',
-    // 部首提示（3/4 显示，其余为 '?'）
+    // 部首提示（按题面信息量显示 2-3 枚，其余为 '?'）
     hintRadicals: ['?', '?', '?', '?'],
     hintPositions: ['', '', '', ''],  // left/right/top/bottom/center
 
     // 游戏状态
     status: 'playing',     // playing | won | lost
+    gameReady: false,
+    submitting: false,
+    rankingNotice: '',
     attempts: [],          // [{ chars, pinyin, result }]
     maxAttempts: 6,
     currentRow: 0,
@@ -28,6 +31,7 @@ Page({
     inputChars: ['', '', '', ''],  // 拆成 4 个字的展示数组
     inputSlots: [0, 1, 2, 3],
     inputFocused: false,    // 输入框是否聚焦
+    keyboardReady: true,
     canSubmit: false,
     inputStatus: '',        // '' | 'valid' | 'loose' | 'duplicate'
 
@@ -85,7 +89,84 @@ Page({
   // ============ 初始化游戏 ============
   initGame() {
     const today = getToday()
-    const idiom = this._practiceMode ? getRandomIdiom() : getDailyIdiom(today)
+    if (this._practiceMode) {
+      this.initLocalGame(today, getRandomIdiom(), '')
+      return
+    }
+
+    this.setData({
+      dateDisplay: this.fmtDate(today),
+      date: today,
+      gameReady: false,
+      submitting: false,
+      rankingNotice: '正在连接今日榜...',
+    })
+    startDailyGame(today).then(res => {
+      if (res.ok && res.game) {
+        this.initRankedGame(res.game)
+        return
+      }
+      console.warn('可信每日局不可用，切换为本地练习:', res.code || res.error || 'unknown')
+      this.initLocalGame(today, getDailyIdiom(today), '离线练习，不计入今日榜')
+    })
+  },
+
+  initRankedGame(game) {
+    this._rankedMode = true
+    const attempts = Array.isArray(game.attempts) ? game.attempts : []
+    const status = game.status || 'playing'
+    const answer = game.answer || null
+    const lastAttempt = attempts[attempts.length - 1]
+    this.answerIdiom = answer ? {
+      text: answer.text,
+      pinyin: answer.pinyin || [],
+      meaning: answer.meaning || '',
+      source: answer.source || '',
+    } : null
+
+    this.setData({
+      dateDisplay: this.fmtDate(game.date),
+      date: game.date,
+      puzzleNumber: game.puzzleNumber,
+      status,
+      gameReady: true,
+      submitting: false,
+      rankingNotice: '',
+      attempts,
+      currentRow: attempts.length,
+      maxAttempts: game.maxAttempts || 6,
+      inputText: '',
+      inputChars: ['', '', '', ''],
+      inputFocused: false,
+      canSubmit: false,
+      inputStatus: '',
+      showPraise: status !== 'playing',
+      praiseText: status === 'won'
+        ? getPraise(attempts.length, true, this.getStreak())
+        : status === 'lost' ? getPraise(attempts.length, false, 0, answer ? answer.text : '') : '',
+      showAnswer: status === 'lost' && Boolean(answer),
+      answerText: answer ? answer.text : '',
+      answerPinyin: answer && answer.pinyin ? answer.pinyin.join(' ') : '',
+      answerMeaning: answer ? answer.meaning || '' : '',
+      hintRadicals: game.hintRadicals || ['?', '?', '?', '?'],
+      hintPositions: game.hintPositions || ['', '', '', ''],
+      roundFeedback: status === 'playing' && lastAttempt ? this.buildRoundFeedback(lastAttempt.result, status) : '',
+      resultReview: status !== 'playing' ? this.buildResultReview(attempts) : '',
+      comparisonText: '',
+      comparisonBars: [],
+      shareImagePath: '',
+      reminderStatusText: '',
+    })
+    if (status !== 'playing') {
+      this.loadDailyStats(attempts, status)
+      this.prepareShareImage(attempts, status)
+      if (answer) this.saveCompletedGameLocally(attempts, status, answer)
+    }
+    this.refreshRetentionPanel()
+  },
+
+  initLocalGame(today, idiom, rankingNotice) {
+    this._rankedMode = false
 
     // 检查是否有今日存档
     const saved = this._practiceMode ? null : this.loadSavedGame(today)
@@ -98,6 +179,9 @@ Page({
         date: today,
         puzzleNumber: idiom.puzzleNumber,
         status: saved.status,
+        gameReady: true,
+        submitting: false,
+        rankingNotice,
         attempts: saved.attempts,
         currentRow: saved.attempts.length,
         showPraise: saved.status !== 'playing',
@@ -119,6 +203,9 @@ Page({
         date: today,
         puzzleNumber: idiom.puzzleNumber,
         status: 'playing',
+        gameReady: true,
+        submitting: false,
+        rankingNotice,
         attempts: [],
         currentRow: 0,
         inputText: '',
@@ -139,7 +226,7 @@ Page({
 
     // 计算部首提示（与首页一致）
     const posData = idiom.radicalPositions || []
-    const positions = getHintPositions(today, posData, idiom.radicals)
+    const positions = getHintPositions(today, posData, idiom.radicals, idiom.chars)
     const hintRadicals = ['?', '?', '?', '?']
     const hintPositions = ['', '', '', '']
     positions.forEach(p => {
@@ -164,8 +251,8 @@ Page({
   /** 输入框内容变化 — 核心：输入法连续组词不被打断 */
   onInputChange(e) {
     const text = e.detail.value || ''
-    // 只取前 4 个字符（汉字可能多字节，用 Array.from 正确拆分）
-    const allChars = Array.from(text).slice(0, 4)
+    // 只把已选中的汉字放进四格，拼音组合态留给原生输入法候选栏处理。
+    const allChars = Array.from(text).filter(c => /^[一-鿿]$/.test(c)).slice(0, 4)
     const chars = ['', '', '', '']
     allChars.forEach((c, i) => { chars[i] = c })
     const canSubmit = allChars.length === 4
@@ -209,12 +296,14 @@ Page({
 
   /** 清空输入（非受控模式：通过切换 focus 清空原生输入框） */
   onClearInput() {
-    this.setData({ inputFocused: false })
+    this.setData({ inputFocused: false, keyboardReady: false })
     setTimeout(() => {
       this.setData({
         inputText: '',
         inputChars: ['', '', '', ''],
         canSubmit: false,
+        inputStatus: '',
+        keyboardReady: true,
         inputFocused: true,
       })
     }, 100)
@@ -222,9 +311,10 @@ Page({
 
   // ============ 提交猜测 ============
 
-  onSubmitGuess() {
+  async onSubmitGuess() {
     if (!this.data.canSubmit) return
     if (this.data.status !== 'playing') return
+    if (!this.data.gameReady || this.data.submitting) return
 
     const chars = [...this.data.inputChars]
     const guessText = chars.join('')
@@ -243,6 +333,94 @@ Page({
       wx.showToast({ title: hint, icon: 'none', duration: 2000 })
       return
     }
+
+    if (this._rankedMode) {
+      await this.submitRankedGuess(chars, guessText)
+      return
+    }
+
+    this.submitLocalGuess(chars, guessText)
+  },
+
+  async submitRankedGuess(chars, guessText) {
+    this.setData({ submitting: true, canSubmit: false, inputFocused: false })
+    const previousStatus = this.data.status
+    const response = await submitDailyGuess(this.data.date, guessText)
+    if (!response.ok || !response.game) {
+      this.setData({ submitting: false, canSubmit: true, inputFocused: true })
+      wx.showToast({ title: response.error || '这次没送上榜，再试一次', icon: 'none', duration: 2200 })
+      return
+    }
+
+    const game = response.game
+    const attempts = Array.isArray(game.attempts) ? game.attempts : []
+    const lastAttempt = attempts[attempts.length - 1]
+    const status = game.status || 'playing'
+    const answer = game.answer || null
+    if (answer) {
+      this.answerIdiom = {
+        text: answer.text,
+        pinyin: answer.pinyin || [],
+        meaning: answer.meaning || '',
+        source: answer.source || '',
+      }
+    }
+
+    if (status === 'won' && previousStatus === 'playing') this.updateStreak()
+    const praiseText = status === 'won'
+      ? getPraise(attempts.length, true, this.getStreak())
+      : status === 'lost' ? getPraise(attempts.length, false, 0, answer ? answer.text : '') : ''
+
+    this.setData({
+      attempts,
+      currentRow: attempts.length,
+      status,
+      submitting: false,
+      showPraise: status !== 'playing',
+      showAnswer: status === 'lost' && Boolean(answer),
+      praiseText,
+      answerText: answer ? answer.text : '',
+      answerPinyin: answer && answer.pinyin ? answer.pinyin.join(' ') : '',
+      answerMeaning: answer ? answer.meaning || '' : '',
+      roundFeedback: lastAttempt ? this.buildRoundFeedback(lastAttempt.result, status) : '',
+      resultReview: this.buildResultReview(attempts),
+      inputText: '',
+      inputChars: ['', '', '', ''],
+      inputFocused: false,
+      canSubmit: false,
+      inputStatus: '',
+    })
+
+    logEvent('submit_guess', {
+      mode: 'daily',
+      date: this.data.date,
+      row: attempts.length,
+      validIdiom: Boolean(this._idiomSet && this._idiomSet.has(guessText)),
+      verified: true,
+    })
+
+    if (status === 'playing') {
+      setTimeout(() => { this.setData({ inputFocused: true }) }, 150)
+    } else {
+      if (answer) this.saveCompletedGameLocally(attempts, status, answer)
+      logEvent(status === 'won' ? 'win' : 'lose', {
+        mode: 'daily',
+        date: this.data.date,
+        attempts: attempts.length,
+        verified: true,
+      })
+      this.loadDailyStats(attempts, status)
+      this.prepareShareImage(attempts, status)
+    }
+
+    if (lastAttempt && lastAttempt.result.summary.isWin) {
+      wx.vibrateShort({ type: 'heavy' })
+    } else {
+      wx.vibrateShort({ type: 'light' })
+    }
+  },
+
+  submitLocalGuess(chars, guessText) {
 
     // 查找拼音
     const guessPinyin = this.lookupPinyin(chars)
@@ -268,10 +446,7 @@ Page({
     if (result.summary.isWin) {
       newStatus = 'won'
       showPraise = true
-      if (!this._practiceMode) {
-        this.updateStreak()
-      }
-      praiseText = getPraise(attempts.length, true, this._practiceMode ? 0 : this.getStreak())
+      praiseText = getPraise(attempts.length, true, 0)
     } else if (newRow >= this.data.maxAttempts) {
       newStatus = 'lost'
       showPraise = true
@@ -306,21 +481,15 @@ Page({
       attempts,
     })
 
-    // 保存到历史记录（云端 + 本地双写）— 练习模式跳过
+    // 离线降级局只保存在本机，不进入今日榜或可信连胜。
     if (newStatus !== 'playing' && !this._practiceMode) {
-      submitGameResult({
-        date: this.data.date,
-        dateDisplay: this.data.dateDisplay,
-        answer: this.answerIdiom,
-        attempts,
-        status: newStatus,
-      })
+      this.saveCompletedGameLocally(attempts, newStatus, this.answerIdiom)
       logEvent(newStatus === 'won' ? 'win' : 'lose', {
-        mode: 'daily',
+        mode: 'daily-offline',
         date: this.data.date,
         attempts: attempts.length,
+        verified: false,
       })
-      this.loadDailyStats(attempts, newStatus)
       this.prepareShareImage(attempts, newStatus)
     }
 
@@ -330,6 +499,16 @@ Page({
     } else {
       wx.vibrateShort({ type: 'light' })
     }
+  },
+
+  saveCompletedGameLocally(attempts, status, answer) {
+    saveLocalGameResult({
+      date: this.data.date,
+      dateDisplay: this.data.dateDisplay,
+      answer,
+      attempts,
+      status,
+    })
   },
 
   buildRoundFeedback(result, status) {
@@ -366,6 +545,10 @@ Page({
     if (this._practiceMode) return
     const self = this
     fetchDailyStats(this.data.date).then(function (res) {
+      if (res.unavailable) {
+        self.setData({ comparisonText: '全网数据暂时没连上，成绩已由服务端保存。', comparisonBars: [] })
+        return
+      }
       const stats = res.stats || {}
       const comparison = self.buildComparison(stats, attempts, status)
       self.setData({
@@ -586,7 +769,7 @@ Page({
   },
 
   saveGame(state) {
-    if (this._practiceMode) return
+    if (this._practiceMode || this._rankedMode) return
     try {
       wx.setStorageSync(this.SAVE_KEY, {
         date: this.data.date,

@@ -88,7 +88,7 @@
     <view class="mini-links">
       <view class="mini-link" bindtap="onLeaderboard">
         <text class="mini-icon">榜</text>
-        <text class="mini-text">历史印记</text>
+        <text class="mini-text">今日排行</text>
       </view>
       <view class="mini-link" bindtap="onProfile">
         <text class="mini-icon">印</text>

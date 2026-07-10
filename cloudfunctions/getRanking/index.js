@@ -5,12 +5,16 @@ const db = cloud.database()
 const _ = db.command
 
 exports.main = async (event, context) => {
-  const { date, limit = 50, onlyStats = false } = event
+  const { date, onlyStats = false } = event
+  const requestedLimit = Number(event.limit)
+  const limit = Number.isInteger(requestedLimit) ? Math.min(100, Math.max(1, requestedLimit)) : 50
 
   try {
-    // 查询条件
-    const where = {}
-    if (date) where.date = date
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date || ''))) {
+      return { ok: false, error: '排行榜日期必填', rankList: [] }
+    }
+    // 只展示由服务端逐次判分产生的可信成绩。
+    const where = { date, verified: true }
 
     const statsResult = await db.collection('game_results')
       .where(where)
@@ -36,17 +40,18 @@ exports.main = async (event, context) => {
       rank: index + 1,
       player: item.playerName || '匿名玩家',
       avatar: item.avatar || '',
-      answerText: item.answerText || '???',
       attempts: item.attempts,
       won: item.won,
       date: item.date,
+      emojiGrid: item.emojiGrid || [],
+      verified: true,
     }))
 
     return {
       ok: true,
       rankList,
       stats,
-      total: result.data.length,
+      total: stats.total,
     }
   } catch (e) {
     console.error('getRanking error:', e)

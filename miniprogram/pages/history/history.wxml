@@ -10,7 +10,7 @@
 
   <!-- 印记列表 -->
   <view class="rank-list">
-    <view class="rank-item" wx:for="{{rankList}}" wx:key="index">
+    <view class="rank-item" wx:for="{{rankList}}" wx:key="rank">
       <!-- 排名徽章 -->
       <view class="rank-badge {{item.rank === 1 ? 'gold' : item.rank === 2 ? 'silver' : item.rank === 3 ? 'bronze' : ''}}">
         <text wx:if="{{item.rank === 1}}" class="rank-medal">一</text>
@@ -23,7 +23,7 @@
       <view class="rank-center">
         <text class="rank-kicker">第 {{item.rank}} 枚印记</text>
         <text class="rank-player">{{item.player}}</text>
-        <text class="rank-answer">{{item.answerText}}</text>
+        <text class="rank-summary">{{item.resultText}}</text>
       </view>
 
       <!-- 猜次状态 -->
@@ -31,18 +31,18 @@
         <view class="box-row">
           <view class="guess-box {{bx}}" wx:for="{{item.boxes}}" wx:for-item="bx" wx:key="index"></view>
         </view>
-        <text class="rank-count {{item.won ? 'won' : 'lost'}}">{{item.won ? item.attempts + '/6' : '✗'}}</text>
+        <text class="rank-count {{item.won ? 'won' : 'lost'}}">{{item.won ? item.attempts + '/6' : '未破'}}</text>
       </view>
     </view>
   </view>
 
-  <view class="collection-panel">
+  <view class="collection-panel" wx:if="{{rankList.length > 0}}">
     <view class="collection-head">
       <view>
-        <text class="collection-title">印册进度</text>
-        <text class="collection-sub">每天一枚，连起来就是你的成语足迹。</text>
+        <text class="collection-title">可信今日榜</text>
+        <text class="collection-sub">每次猜测均由服务端判定，榜单不公开今日答案。</text>
       </view>
-      <view class="collection-count">{{rankList.length}}/7</view>
+      <view class="collection-count">{{rankList.length}} 人</view>
     </view>
     <view class="stamp-row">
       <view class="stamp-slot done">
@@ -62,10 +62,10 @@
   </view>
 
   <!-- 空状态 -->
-  <view class="empty-state" wx:if="{{rankList.length === 0}}">
+  <view class="empty-state" wx:if="{{!loading && rankList.length === 0}}">
     <text class="empty-icon">印</text>
-    <text class="empty-text">还没有游戏记录</text>
-    <text class="empty-sub">快去猜今天的成语吧！</text>
+    <text class="empty-text">{{unavailable ? '今日榜暂时没连上' : '还没有可信成绩'}}</text>
+    <text class="empty-sub">{{unavailable ? '检查网络后再来翻榜' : '完成今日挑战，就能留下第一枚印记'}}</text>
   </view>
 
   <!-- 底部导航 -->

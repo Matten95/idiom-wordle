@@ -92,9 +92,9 @@
           <text class="input-char-text">{{inputChars[index] || ''}}</text>
         </view>
       </view>
-      <input class="keyboard-input" type="text" focus="{{inputFocused}}"
+      <input wx:if="{{keyboardReady}}" class="keyboard-input" type="text" focus="{{inputFocused}}"
         bindinput="onInputChange" bindfocus="onInputFocus" bindblur="onInputBlur" confirm-type="done" bindconfirm="onSubmitGuess"
-        adjust-position="{{true}}" hold-keyboard="{{true}}" />
+        adjust-position="{{true}}" hold-keyboard="{{true}}" cursor-spacing="160" />
       <view class="guess-error" wx:if="{{guessError}}">{{guessError}}</view>
       <view class="actions">
         <button class="btn btn-clear" bindtap="onClearInput">清空</button>
